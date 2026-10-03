@@ -35,9 +35,8 @@ namespace View
     /// quarter of a hex of reach in the simulation, so a player who cannot see
     /// which level a cell is on cannot read the range of a tower placed there.
     /// The floor lifts each cell by <see cref="HexGeometry.LevelStep"/> per
-    /// level, lays a contour along every edge where the level changes, and
-    /// reports a bounding box that includes the climb, so the camera frames a
-    /// board with relief as a board with relief.
+    /// level and reports a bounding box that includes the climb, so the camera
+    /// frames a board with relief as a board with relief.
     /// </para>
     /// <para>
     /// <b>The map arrives parsed.</b> This class never opens a file and never
@@ -57,7 +56,7 @@ namespace View
 
         private Transform _sky;
 
-        private Material _ink;
+        private Material[] _shades = System.Array.Empty<Material>();
 
         /// <summary>The map this floor was drawn from.</summary>
         public HexMap Map { get; private set; }
@@ -69,8 +68,6 @@ namespace View
         public int TileCount => _tiles.Count(tile => tile != null);
 
         public MeshRenderer Skin { get; private set; }
-
-        public MeshRenderer Contours { get; private set; }
 
         /// <summary>The material a corridor cell is drawn with.</summary>
         public Material RoadMaterial { get; private set; }
@@ -255,33 +252,61 @@ namespace View
             float rim = settings?.RimDrop ?? DressingSettings.Default.RimDrop;
             var skin = new HexSkin(map, _tiles, rim);
 
-            Skin = Host("Skin", skin.Ground(HexSkin.Swatches.SampledFrom(tiles.MeshFor(TilePiece.Ground))), GrassMaterial);
+            _shades = ShadesOfGround(map);
+
+            var host = new GameObject("Skin");
+            host.transform.SetParent(transform, worldPositionStays: false);
+            host.AddComponent<MeshFilter>().sharedMesh =
+                skin.Ground(HexSkin.Swatches.SampledFrom(tiles.MeshFor(TilePiece.Ground)));
+
+            Skin = host.AddComponent<MeshRenderer>();
+            Skin.sharedMaterials = SkinMaterials(map);
             Skin.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             Skin.receiveShadows = true;
-
-            _ink = ViewMaterials.Matte("Contour", SceneFraming.ContourColor);
-            Contours = Host("Contours", skin.Contours(), _ink);
-            Contours.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            Contours.receiveShadows = false;
         }
 
-        private MeshRenderer Host(string name, Mesh mesh, Material material)
+        private Material[] ShadesOfGround(HexMap map)
         {
-            var host = new GameObject(name);
-            host.transform.SetParent(transform, worldPositionStays: false);
-            host.AddComponent<MeshFilter>().sharedMesh = mesh;
+            (int lowest, int highest) = LevelsInUse(map);
 
-            var renderer = host.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
+            return Enumerable.Range(lowest, highest - lowest + 1)
+                .Select(level => ViewMaterials.Shaded(
+                    GrassMaterial,
+                    SceneFraming.GroundShade(level, lowest, highest),
+                    "Ground at level " + level.ToString(CultureInfo.InvariantCulture)))
+                .ToArray();
+        }
 
-            return renderer;
+        private Material[] SkinMaterials(HexMap map)
+        {
+            int lowest = LevelsInUse(map).Lowest;
+            Material[] materials = Enumerable.Repeat(GrassMaterial, HexSkin.SubmeshCount).ToArray();
+
+            for (int index = 0; index < _shades.Length; index++)
+            {
+                materials[HexSkin.ShadeSubmesh(lowest + index)] = _shades[index];
+            }
+
+            return materials;
+        }
+
+        private static (int Lowest, int Highest) LevelsInUse(HexMap map)
+        {
+            int[] levels = Enumerable.Range(0, map.Height)
+                .SelectMany(row => Enumerable.Range(0, map.Width).Select(column => map.LevelAt(column, row)))
+                .ToArray();
+
+            return (levels.Min(), levels.Max());
         }
 
         private void OnDestroy()
         {
             Retire(Skin);
-            Retire(Contours);
-            Discard(_ink);
+
+            foreach (Material shade in _shades)
+            {
+                Discard(shade);
+            }
         }
 
         private static void Retire(MeshRenderer renderer)

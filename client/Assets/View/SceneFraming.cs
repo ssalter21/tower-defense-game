@@ -162,7 +162,14 @@ namespace View
         /// </summary>
         public static Color BackgroundColor => new Color(0.11f, 0.13f, 0.16f, 1f);
 
-        public static Color ContourColor => new Color(0.13f, 0.09f, 0.06f, 1f);
+        public const float LowestGroundShade = 0.85f;
+
+        public const float HighestGroundShade = 1.15f;
+
+        public static float GroundShade(int level, int lowest, int highest) =>
+            highest == lowest
+                ? 1f
+                : Mathf.Lerp(LowestGroundShade, HighestGroundShade, (level - lowest) / (float)(highest - lowest));
 
         // ---------------------------------------------------------------
         // The world behind and beneath the board

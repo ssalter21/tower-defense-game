@@ -10,9 +10,9 @@ namespace View
     {
         private const float Inset = 0.6f;
 
-        private const float ContourWidth = 0.1f;
+        public const int BareSubmesh = 0;
 
-        public const float ContourLift = 0.05f;
+        public const int SubmeshCount = HexMap.LevelCount + 1;
 
         private const float NearCornerSquared = 0.04f;
 
@@ -135,6 +135,8 @@ namespace View
 
         public bool StandsAPiece(int column, int row) => _pieceCorners[(row * _map.Width) + column] != null;
 
+        public static int ShadeSubmesh(int level) => level + 1;
+
         public float LevelHeight(int column, int row) => _map.LevelAt(column, row) * HexGeometry.LevelStep;
 
         public float HeightAt(int column, int row, Vector3 cornerXZ)
@@ -174,7 +176,7 @@ namespace View
 
         public Mesh Ground(Swatches swatches)
         {
-            var mesh = new FlatMesh();
+            var mesh = new FlatMesh(SubmeshCount);
 
             for (int row = 0; row < _map.Height; row++)
             {
@@ -197,51 +199,6 @@ namespace View
             }
 
             return mesh.Build("Skin");
-        }
-
-        public Mesh Contours()
-        {
-            var mesh = new FlatMesh();
-
-            for (int row = 0; row < _map.Height; row++)
-            {
-                for (int column = 0; column < _map.Width; column++)
-                {
-                    for (int direction = 0; direction < Hex.DirectionCount; direction++)
-                    {
-                        if (!Neighbour(column, row, direction, out int otherColumn, out int otherRow))
-                        {
-                            continue;
-                        }
-
-                        if ((otherRow * _map.Width) + otherColumn < (row * _map.Width) + column)
-                        {
-                            continue;
-                        }
-
-                        if (_map.LevelAt(column, row) == _map.LevelAt(otherColumn, otherRow))
-                        {
-                            continue;
-                        }
-
-                        (int first, int second) = _edgeCorners[direction];
-                        Vector3 firstXZ = CornerXZ(column, row, first);
-                        Vector3 secondXZ = CornerXZ(column, row, second);
-                        Vector3 middleXZ = (firstXZ + secondXZ) * 0.5f;
-
-                        float firstHeight = CornerHeight(firstXZ);
-                        float secondHeight = CornerHeight(secondXZ);
-                        float middle = StandsAPiece(column, row) || StandsAPiece(otherColumn, otherRow)
-                            ? (firstHeight + secondHeight) * 0.5f
-                            : (LevelHeight(column, row) + LevelHeight(otherColumn, otherRow)) * 0.5f;
-
-                        Ribbon(mesh, WithY(firstXZ, firstHeight), WithY(middleXZ, middle));
-                        Ribbon(mesh, WithY(middleXZ, middle), WithY(secondXZ, secondHeight));
-                    }
-                }
-            }
-
-            return mesh.Build("Contours");
         }
 
         private float[] PieceCorners(MeshRenderer piece, int column, int row)
@@ -280,6 +237,7 @@ namespace View
         private void SkinCell(FlatMesh mesh, Swatches swatches, int column, int row)
         {
             float height = LevelHeight(column, row);
+            int shade = ShadeSubmesh(_map.LevelAt(column, row));
             Vector3 centreXZ = Centre(column, row);
             Vector3 centre = WithY(centreXZ, height);
             var plateau = new Vector3[Hex.DirectionCount];
@@ -292,7 +250,7 @@ namespace View
             for (int corner = 0; corner < Hex.DirectionCount; corner++)
             {
                 mesh.Triangle(
-                    centre, plateau[corner], plateau[(corner + 1) % Hex.DirectionCount], swatches.Grass, Vector3.up);
+                    shade, centre, plateau[corner], plateau[(corner + 1) % Hex.DirectionCount], swatches.Grass, Vector3.up);
             }
 
             for (int direction = 0; direction < Hex.DirectionCount; direction++)
@@ -313,7 +271,7 @@ namespace View
                         farSecond = (plateau[second] + farSecond) * 0.5f;
                     }
 
-                    mesh.Quad(plateau[first], plateau[second], farSecond, farFirst, swatches.Grass, Vector3.up);
+                    mesh.Quad(shade, plateau[first], plateau[second], farSecond, farFirst, swatches.Grass, Vector3.up);
 
                     continue;
                 }
@@ -322,12 +280,12 @@ namespace View
                 float rimSecond = RimHeightAt(secondXZ);
 
                 mesh.Quad(
-                    plateau[first], plateau[second],
+                    BareSubmesh, plateau[first], plateau[second],
                     WithY(secondXZ, rimSecond), WithY(firstXZ, rimFirst),
                     swatches.Earth, Vector3.up);
 
                 mesh.Quad(
-                    WithY(firstXZ, rimFirst), WithY(secondXZ, rimSecond),
+                    BareSubmesh, WithY(firstXZ, rimFirst), WithY(secondXZ, rimSecond),
                     WithY(secondXZ, rimSecond - HexGeometry.TileBody), WithY(firstXZ, rimFirst - HexGeometry.TileBody),
                     swatches.Earth, outward);
             }
@@ -350,6 +308,7 @@ namespace View
                 Vector3 outward = firstXZ + secondXZ - (2f * centreXZ);
 
                 mesh.Quad(
+                    BareSubmesh,
                     WithY(firstXZ, HeightAt(column, row, firstXZ)),
                     WithY(secondXZ, HeightAt(column, row, secondXZ)),
                     WithY(secondXZ, RimHeightAt(secondXZ) - HexGeometry.TileBody),
@@ -367,16 +326,19 @@ namespace View
                 return;
             }
 
-            var points = new List<(Vector3 Point, bool Ground)>();
+            var points = new List<(Vector3 Point, bool Ground, int Shade)>();
 
             foreach ((int column, int row) in cells)
             {
-                points.Add((Plateau(column, row, cornerXZ), !StandsAPiece(column, row)));
+                points.Add((
+                    Plateau(column, row, cornerXZ),
+                    !StandsAPiece(column, row),
+                    ShadeSubmesh(_map.LevelAt(column, row))));
             }
 
             for (int missing = cells.Count; missing < 3; missing++)
             {
-                points.Add((WithY(cornerXZ, RimHeightAt(cornerXZ)), false));
+                points.Add((WithY(cornerXZ, RimHeightAt(cornerXZ)), false, BareSubmesh));
             }
 
             points = points
@@ -393,7 +355,7 @@ namespace View
                     Vector3 toNext = (here + points[(index + 1) % 3].Point) * 0.5f;
                     Vector3 toPrevious = (here + points[(index + 2) % 3].Point) * 0.5f;
 
-                    mesh.Quad(here, toNext, hub, toPrevious, swatches.Grass, Vector3.up);
+                    mesh.Quad(points[index].Shade, here, toNext, hub, toPrevious, swatches.Grass, Vector3.up);
                 }
 
                 return;
@@ -406,12 +368,8 @@ namespace View
                 int other = 3 - a - b;
                 Vector3 middle = (points[a].Point + points[b].Point) * 0.5f;
 
-                mesh.Triangle(
-                    points[a].Point, middle, points[other].Point,
-                    SwatchFor(swatches, points[a].Point, middle, points[other].Point), Vector3.up);
-                mesh.Triangle(
-                    middle, points[b].Point, points[other].Point,
-                    SwatchFor(swatches, middle, points[b].Point, points[other].Point), Vector3.up);
+                Paint(mesh, swatches, points[a].Shade, points[a].Point, middle, points[other].Point, Vector3.up);
+                Paint(mesh, swatches, points[b].Shade, middle, points[b].Point, points[other].Point, Vector3.up);
 
                 return;
             }
@@ -419,9 +377,9 @@ namespace View
             int only = points.FindIndex(point => point.Ground);
             Vector3 inward = WithY(points[only].Point - cornerXZ, 0f).normalized;
 
-            mesh.Triangle(
+            Paint(
+                mesh, swatches, points[only].Shade,
                 points[0].Point, points[1].Point, points[2].Point,
-                SwatchFor(swatches, points[0].Point, points[1].Point, points[2].Point),
                 Vector3.up + inward);
         }
 
@@ -467,22 +425,24 @@ namespace View
         private static Vector3 CornerXZ(int column, int row, int corner) =>
             Centre(column, row) + HexGeometry.Corner(corner);
 
-        private static void Ribbon(FlatMesh mesh, Vector3 from, Vector3 to)
+        private static void Paint(
+            FlatMesh mesh, Swatches swatches, int shade, Vector3 a, Vector3 b, Vector3 c, Vector3 outward)
         {
-            Vector3 along = to - from;
-            Vector3 side = Vector3.Cross(Vector3.up, new Vector3(along.x, 0f, along.z)).normalized * (ContourWidth * 0.5f);
-            Vector3 lift = Vector3.up * ContourLift;
-
-            mesh.Quad(from - side + lift, from + side + lift, to + side + lift, to - side + lift, Vector2.zero, Vector3.up);
+            if (IsBank(a, b, c))
+            {
+                mesh.Triangle(BareSubmesh, a, b, c, swatches.Earth, outward);
+            }
+            else
+            {
+                mesh.Triangle(shade, a, b, c, swatches.Grass, outward);
+            }
         }
 
-        private static Vector2 SwatchFor(Swatches swatches, Vector3 a, Vector3 b, Vector3 c)
+        private static bool IsBank(Vector3 a, Vector3 b, Vector3 c)
         {
             Vector3 normal = Vector3.Cross(b - a, c - a);
 
-            return normal.sqrMagnitude < 1e-10f || Mathf.Abs(normal.normalized.y) < 0.5f
-                ? swatches.Earth
-                : swatches.Grass;
+            return normal.sqrMagnitude < 1e-10f || Mathf.Abs(normal.normalized.y) < 0.5f;
         }
 
         private static Vector3 WithY(Vector3 point, float y) => new Vector3(point.x, y, point.z);

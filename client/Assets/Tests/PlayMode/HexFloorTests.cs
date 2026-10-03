@@ -229,11 +229,10 @@ namespace Tests.PlayMode
             Assert.That(root.Floor.TileCount, Is.EqualTo(corridor));
             Assert.That(root.Floor.Tiles.Count(), Is.EqualTo(corridor));
             Assert.That(root.Floor.Skin, Is.Not.Null, "no skin");
-            Assert.That(root.Floor.Contours, Is.Not.Null, "no contours");
             Assert.That(
                 root.Floor.transform.childCount,
-                Is.EqualTo(corridor + 2),
-                "the floor is the corridor's pieces, one skin and one set of contours, and nothing else");
+                Is.EqualTo(corridor + 1),
+                "the floor is the corridor's pieces and one skin, and nothing else");
             Assert.That(
                 root.Floor.transform.Cast<Transform>().Any(child => child.name.StartsWith("Cliff")),
                 Is.False,
@@ -331,43 +330,79 @@ namespace Tests.PlayMode
         }
 
         [Test]
-        public void AContourLiesOnEveryEdgeWhereTheLevelChanges()
+        public void EveryGroundCellIsDrawnInItsOwnLevelsShade()
         {
             MatchRoot root = BuildPlayfield();
             HexMap map = root.Map;
-            Mesh ribbons = root.Floor.Contours.GetComponent<MeshFilter>().sharedMesh;
+            MeshRenderer skin = root.Floor.Skin;
+            Mesh mesh = skin.GetComponent<MeshFilter>().sharedMesh;
+            int groundCells = 0;
 
-            int edges = 0;
+            Assert.That(mesh.subMeshCount, Is.EqualTo(skin.sharedMaterials.Length));
 
             for (int row = 0; row < map.Height; row++)
             {
                 for (int column = 0; column < map.Width; column++)
                 {
-                    Hex hex = Hex.FromOddRowOffset(column, row);
-
-                    for (int direction = 0; direction < Hex.DirectionCount; direction++)
+                    if (root.Floor.TileAt(column, row) != null)
                     {
-                        Hex.ToOddRowOffset(hex.Neighbour(direction), out int otherColumn, out int otherRow);
-
-                        if (otherColumn < 0 || otherColumn >= map.Width || otherRow < 0 || otherRow >= map.Height)
-                        {
-                            continue;
-                        }
-
-                        if (map.LevelAt(column, row) > map.LevelAt(otherColumn, otherRow))
-                        {
-                            edges++;
-                        }
+                        continue;
                     }
+
+                    int level = map.LevelAt(column, row);
+                    Vector3 centre = HexGeometry.ToWorld(column, row) + (Vector3.up * level * HexGeometry.LevelStep);
+
+                    Assert.That(
+                        VerticesOf(skin, HexSkin.ShadeSubmesh(level)),
+                        Does.Contain(Rounded(centre)),
+                        "the ground at " + column + "," + row + " is not in level " + level + "'s shade");
+
+                    groundCells++;
                 }
             }
 
-            Assert.That(edges, Is.GreaterThan(0), "the committed board has no change of level on it");
-            Assert.That(
-                ribbons.triangles.Length / 3,
-                Is.EqualTo(edges * 4),
-                "two ribbons of two triangles per edge between two cells of different level");
-            Assert.That(root.Floor.Contours.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.Off));
+            Assert.That(groundCells, Is.GreaterThan(0), "the committed board has no ground on it");
+        }
+
+        [Test]
+        public void EachLevelUpIsALighterGreenAndTheEarthAndRoadAreNotShaded()
+        {
+            MatchRoot root = BuildPlayfield();
+            HexMap map = root.Map;
+            Material[] materials = root.Floor.Skin.sharedMaterials;
+            Color grass = BaseColour(root.Floor.GrassMaterial);
+            int[] levels = Enumerable.Range(0, map.Height)
+                .SelectMany(row => Enumerable.Range(0, map.Width).Select(column => map.LevelAt(column, row)))
+                .Distinct()
+                .OrderBy(level => level)
+                .ToArray();
+
+            Assert.That(levels.Length, Is.GreaterThan(1), "the committed board is flat");
+            Assert.That(materials[HexSkin.BareSubmesh], Is.SameAs(root.Floor.GrassMaterial), "the earth bank is shaded");
+
+            float[] shades = levels
+                .Select(level => BaseColour(materials[HexSkin.ShadeSubmesh(level)]).g / grass.g)
+                .ToArray();
+
+            Assert.That(shades, Is.Ordered.Ascending, "a higher level is not a lighter green");
+            Assert.That(shades.Distinct().Count(), Is.EqualTo(levels.Length), "two levels share a shade");
+            Assert.That(shades.First(), Is.EqualTo(SceneFraming.LowestGroundShade).Within(1e-4f));
+            Assert.That(shades.Last(), Is.EqualTo(SceneFraming.HighestGroundShade).Within(1e-4f));
+
+            foreach ((int level, float shade) in levels.Zip(shades, (level, shade) => (level, shade)))
+            {
+                Color colour = BaseColour(materials[HexSkin.ShadeSubmesh(level)]);
+
+                Assert.That(
+                    new[] { colour.r, colour.b },
+                    Is.EqualTo(new[] { grass.r * shade, grass.b * shade }).Within(1e-4f),
+                    "level " + level + "'s shade is not the grass's own green");
+            }
+
+            foreach (MeshRenderer piece in root.Floor.Tiles)
+            {
+                Assert.That(piece.sharedMaterials, Has.None.Matches<Material>(material => materials.Skip(1).Contains(material)));
+            }
         }
 
         [Test]
@@ -436,7 +471,7 @@ namespace Tests.PlayMode
         {
             MatchRoot root = BuildPlayfield();
 
-            foreach (MeshRenderer tile in root.Floor.Tiles.Append(root.Floor.Skin).Append(root.Floor.Contours))
+            foreach (MeshRenderer tile in root.Floor.Tiles.Append(root.Floor.Skin))
             {
                 Component[] components = tile.GetComponents<Component>();
 
@@ -506,6 +541,19 @@ namespace Tests.PlayMode
 
             return lifted;
         }
+
+        private static HashSet<(int, int, int)> VerticesOf(MeshRenderer renderer, int submesh)
+        {
+            Transform at = renderer.transform;
+            Mesh mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
+            Vector3[] vertices = mesh.vertices;
+
+            return new HashSet<(int, int, int)>(
+                mesh.GetTriangles(submesh).Select(index => Rounded(at.TransformPoint(vertices[index]))));
+        }
+
+        private static Color BaseColour(Material material) =>
+            material.GetColor(material.HasProperty("_BaseColor") ? "_BaseColor" : "_Color");
 
         private static HashSet<(int, int, int)> VerticesOf(MeshRenderer renderer)
         {
