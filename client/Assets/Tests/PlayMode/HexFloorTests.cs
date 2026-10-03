@@ -268,40 +268,66 @@ namespace Tests.PlayMode
         }
 
         [Test]
-        public void TheSkinMeetsEveryRoadPieceAtThePiecesOwnCorners()
+        public void TheSkinMeetsARampAtTheRampsOwnHeightAndNotAtTheCellsLevel()
         {
-            MatchRoot root = BuildPlayfield();
-            HexMap map = root.Map;
-            HashSet<(int, int, int)> vertices = VerticesOf(root.Floor.Skin);
+            HexMap map = StreamingContent.ReadMap();
+            Mesh flat = HexTileMesh.Create();
+            Mesh halfRamp = Lifted(flat, RoadTiling.RampHighEdge, HexGeometry.LevelStep);
+            Mesh ramp = Lifted(flat, RoadTiling.RampHighEdge, 2f * HexGeometry.LevelStep);
+            Material surface = ViewMaterials.Create("Tiles", Color.white);
+
+            _root = new GameObject("Ramps");
+
+            HexFloor floor = HexFloor.Build(
+                _root.transform, map, TileSet.Of(flat, flat, flat, flat, flat, ramp, halfRamp, flat, surface));
+
+            HashSet<(int, int, int)> vertices = VerticesOf(floor.Skin);
+            int ramps = 0;
 
             for (int row = 0; row < map.Height; row++)
             {
                 for (int column = 0; column < map.Width; column++)
                 {
-                    if (map.CellAt(column, row) == MapCell.Ground)
+                    TilePiece piece = floor.PieceAt(column, row);
+
+                    if (piece != TilePiece.StraightHalfRamp && piece != TilePiece.StraightRamp)
                     {
                         continue;
                     }
 
-                    Vector3 centre = HexGeometry.ToWorld(column, row, map.LevelAt(column, row));
+                    ramps++;
+                    Transform tile = floor.TileAt(column, row).transform;
+                    float level = map.LevelAt(column, row) * HexGeometry.LevelStep;
 
-                    for (int corner = 0; corner < Hex.DirectionCount; corner++)
+                    foreach (Vector3 vertex in tile.GetComponent<MeshFilter>().sharedMesh.vertices)
                     {
-                        Vector3 at = centre + HexGeometry.Corner(corner);
+                        if (vertex.y < Tolerance)
+                        {
+                            continue;
+                        }
 
-                        if (!TouchesGround(map, column, row, at))
+                        Vector3 lifted = tile.TransformPoint(vertex);
+
+                        if (!TouchesGround(map, column, row, lifted))
                         {
                             continue;
                         }
 
                         Assert.That(
-                            vertices.Contains(Rounded(at)),
+                            vertices.Contains(Rounded(lifted)),
                             Is.True,
-                            "the skin has no vertex at corner " + corner + " of road cell " + column + "," + row
-                            + " at the piece's own height, so the ground does not meet the road at its edge");
+                            "the skin has no vertex at the high corner of the ramp at " + column + "," + row
+                            + ", so the ground does not meet the piece at the piece's own height");
+
+                        Assert.That(
+                            vertices.Contains(Rounded(new Vector3(lifted.x, level, lifted.z))),
+                            Is.False,
+                            "the skin meets the ramp at " + column + "," + row + " at the cell's level, under the ramp's high edge");
                     }
                 }
             }
+
+            Assert.That(ramps, Is.GreaterThan(0), "the committed corridor has no ramp on it to meet");
         }
 
         [Test]
@@ -453,6 +479,32 @@ namespace Tests.PlayMode
                 Is.EqualTo(new[] { nameof(StreamingContent) + "." + nameof(StreamingContent.ReadMap) }),
                 "Something in the view is producing a map other than by handing bytes to the "
                 + "simulation's parser.");
+        }
+
+        private static Mesh Lifted(Mesh tile, int edge, float by)
+        {
+            Hex origin = Hex.FromOddRowOffset(0, 0);
+            Vector3 towards = HexGeometry.ToWorld(origin.Neighbour(edge)) - HexGeometry.ToWorld(origin);
+            int[] onTheEdge = Enumerable.Range(0, Hex.DirectionCount)
+                .OrderByDescending(corner => Vector3.Dot(HexGeometry.Corner(corner), towards))
+                .Take(2)
+                .ToArray();
+
+            Vector3[] vertices = tile.vertices;
+
+            foreach (int corner in onTheEdge)
+            {
+                vertices[corner + 1] += Vector3.up * by;
+            }
+
+            var lifted = new Mesh { name = tile.name + " lifted" };
+            lifted.vertices = vertices;
+            lifted.normals = tile.normals;
+            lifted.uv = tile.uv;
+            lifted.triangles = tile.triangles;
+            lifted.RecalculateBounds();
+
+            return lifted;
         }
 
         private static HashSet<(int, int, int)> VerticesOf(MeshRenderer renderer)

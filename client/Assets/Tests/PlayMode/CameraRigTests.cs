@@ -459,10 +459,6 @@ namespace Tests.PlayMode
                 Is.Empty,
                 "a world-space canvas is a flat card");
 
-            // The ground has relief: the skin climbs every level the map has
-            // and hangs a skirt of earth off the rim, and the contours lie on
-            // it. Neither is a card, and neither is flat; what bounds them is
-            // the board's own height and no more.
             float relief = (Levels(root.Map) * HexGeometry.LevelStep)
                 + DressingSettings.Default.RimDrop
                 + HexGeometry.TileBody
@@ -472,9 +468,6 @@ namespace Tests.PlayMode
             {
                 Assert.That(renderer, Is.TypeOf<MeshRenderer>(), renderer.name + " is not a mesh renderer");
 
-                // A contour is a ribbon lying a hair above the ground. Its own
-                // shadow would be a second dark line beside it, so it casts
-                // none and takes none; everything else is lit like geometry.
                 bool contour = renderer == root.Floor.Contours;
 
                 Assert.That(
@@ -645,7 +638,6 @@ namespace Tests.PlayMode
             return hashes.ToArray();
         }
 
-        /// <summary>How many levels the map climbs from its lowest cell to its highest.</summary>
         private static int Levels(HexMap map)
         {
             int lowest = int.MaxValue, highest = int.MinValue;

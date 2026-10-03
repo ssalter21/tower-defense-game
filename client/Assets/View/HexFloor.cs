@@ -68,10 +68,8 @@ namespace View
         /// <summary>How many pieces stand on the floor: the corridor's, and any cell under the water line.</summary>
         public int TileCount => _tiles.Count(tile => tile != null);
 
-        /// <summary>The one mesh of ground between the pieces.</summary>
         public MeshRenderer Skin { get; private set; }
 
-        /// <summary>The ribbons along every edge where the level changes.</summary>
         public MeshRenderer Contours { get; private set; }
 
         /// <summary>The material a corridor cell is drawn with.</summary>

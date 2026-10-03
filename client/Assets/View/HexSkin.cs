@@ -8,13 +8,13 @@ namespace View
 {
     public sealed class HexSkin
     {
-        public const float Inset = 0.6f;
+        private const float Inset = 0.6f;
 
-        public const float ContourWidth = 0.1f;
+        private const float ContourWidth = 0.1f;
 
         public const float ContourLift = 0.05f;
 
-        private const float NearCorner = 0.04f;
+        private const float NearCornerSquared = 0.04f;
 
         private readonly HexMap _map;
 
@@ -133,8 +133,6 @@ namespace View
             }
         }
 
-        public HexMap Map => _map;
-
         public bool StandsAPiece(int column, int row) => _pieceCorners[(row * _map.Width) + column] != null;
 
         public float LevelHeight(int column, int row) => _map.LevelAt(column, row) * HexGeometry.LevelStep;
@@ -174,36 +172,6 @@ namespace View
             return cells.Count < 3 ? RimHeightAt(cornerXZ) : MeanAt(cornerXZ);
         }
 
-        public static int LevelEdges(HexMap map)
-        {
-            int edges = 0;
-
-            for (int row = 0; row < map.Height; row++)
-            {
-                for (int column = 0; column < map.Width; column++)
-                {
-                    Hex hex = Hex.FromOddRowOffset(column, row);
-
-                    for (int direction = 0; direction < Hex.DirectionCount; direction++)
-                    {
-                        Hex.ToOddRowOffset(hex.Neighbour(direction), out int otherColumn, out int otherRow);
-
-                        if (otherColumn < 0 || otherColumn >= map.Width || otherRow < 0 || otherRow >= map.Height)
-                        {
-                            continue;
-                        }
-
-                        if (map.LevelAt(column, row) > map.LevelAt(otherColumn, otherRow))
-                        {
-                            edges++;
-                        }
-                    }
-                }
-            }
-
-            return edges;
-        }
-
         public Mesh Ground(Swatches swatches)
         {
             var mesh = new FlatMesh();
@@ -214,18 +182,18 @@ namespace View
                 {
                     if (StandsAPiece(column, row))
                     {
-                        PieceSkirt(mesh, swatches, column, row);
+                        SkirtPiece(mesh, swatches, column, row);
                     }
                     else
                     {
-                        Cell(mesh, swatches, column, row);
+                        SkinCell(mesh, swatches, column, row);
                     }
                 }
             }
 
             foreach (KeyValuePair<long, List<(int Column, int Row)>> corner in _cellsAtCorner)
             {
-                Corner(mesh, swatches, _cornerAt[corner.Key], corner.Value);
+                SkinCorner(mesh, swatches, _cornerAt[corner.Key], corner.Value);
             }
 
             return mesh.Build("Skin");
@@ -295,7 +263,7 @@ namespace View
                 {
                     float dx = vertex.x - local.x, dz = vertex.z - local.z;
 
-                    if ((dx * dx) + (dz * dz) < NearCorner && vertex.y > best)
+                    if ((dx * dx) + (dz * dz) < NearCornerSquared && vertex.y > best)
                     {
                         best = vertex.y;
                     }
@@ -309,7 +277,7 @@ namespace View
             return heights;
         }
 
-        private void Cell(FlatMesh mesh, Swatches swatches, int column, int row)
+        private void SkinCell(FlatMesh mesh, Swatches swatches, int column, int row)
         {
             float height = LevelHeight(column, row);
             Vector3 centreXZ = Centre(column, row);
@@ -365,7 +333,7 @@ namespace View
             }
         }
 
-        private void PieceSkirt(FlatMesh mesh, Swatches swatches, int column, int row)
+        private void SkirtPiece(FlatMesh mesh, Swatches swatches, int column, int row)
         {
             Vector3 centreXZ = Centre(column, row);
 
@@ -390,7 +358,7 @@ namespace View
             }
         }
 
-        private void Corner(FlatMesh mesh, Swatches swatches, Vector3 cornerXZ, List<(int Column, int Row)> cells)
+        private void SkinCorner(FlatMesh mesh, Swatches swatches, Vector3 cornerXZ, List<(int Column, int Row)> cells)
         {
             int grounds = cells.Count(cell => !StandsAPiece(cell.Column, cell.Row));
 

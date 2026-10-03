@@ -122,7 +122,7 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void TheCommittedBoardUnderTheShippedDressingBakesToTheCommittedFile()
+        public void TheCommittedBoardUnderTheShippedDressingSpeaksForTheSameCellsAsTheFile()
         {
             HexMap map = StreamingContent.ReadMap();
             DressingSettings shipped = BoardDressingTools.Settings();
