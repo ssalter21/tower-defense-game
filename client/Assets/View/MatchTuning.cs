@@ -277,9 +277,9 @@ namespace View
         /// <remarks>
         /// <b>SIGNED, and one of the few numbers in this file that is.</b> Sam
         /// picked it on 7 Sep 2026 off a rendered bracket of 0.15, 0.28 and
-        /// 0.45 — see <c>docs/frames/effect-candidates/</c>, and
-        /// <c>docs/decision-log.md</c> for what it was picked against. The case
-        /// it was decided on is two circles overlapping with bodies walking
+        /// 0.45 — see <c>docs/decision-log.md</c> for what it was picked
+        /// against. The case it was decided on is two circles overlapping
+        /// with bodies walking
         /// through, not one circle on empty floor, which reads at almost any
         /// value.
         /// </remarks>
@@ -362,8 +362,7 @@ namespace View
         /// <remarks>
         /// <b>SIGNED on 7 Sep 2026, off a rendered bracket of 0.55, 0.85 and
         /// 1.1 metres and a dark-bladed alternative at the shipped length</b> —
-        /// see <c>docs/frames/effect-candidates/</c> and
-        /// <c>docs/decision-log.md</c>. Sam took 0.85 in the shipped pale grey,
+        /// see <c>docs/decision-log.md</c>. Sam took 0.85 in the shipped pale grey,
         /// so the answer was a size and not a contrast.
         /// <para>
         /// <b>It is signed knowing it is nearly invisible at play size.</b>

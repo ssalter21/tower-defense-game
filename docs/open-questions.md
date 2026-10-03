@@ -146,8 +146,7 @@ event-driven tint would be right until the first drag of the scrub bar; the reas
 [ADR-0008](adr/0008-match-events-are-decorative.md). **Nothing is drawn on a body carrying a modifier** — no
 wash per payload, nothing for which way a speed moved, nothing on a body carrying two modifiers or on a tower
 carrying one; which bodies an aura caught is read off the translucent circle it lays on the floor. **What is
-still a placeholder is the bar**: two segments above the body, photographed in
-[`docs/frames/effects-roster-tick-0700.png`](frames/README.md), which does not turn to face the camera and
+still a placeholder is the bar**: two segments above the body, which does not turn to face the camera and
 whose segments are both shares of the authored health. That decision is Sam's, and so is how see-through the
 circles should be.
 
