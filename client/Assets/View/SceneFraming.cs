@@ -162,9 +162,9 @@ namespace View
         /// </summary>
         public static Color BackgroundColor => new Color(0.11f, 0.13f, 0.16f, 1f);
 
-        public const float LowestGroundShade = 0.85f;
+        public const float LowestGroundShade = 0.70f;
 
-        public const float HighestGroundShade = 1.15f;
+        public const float HighestGroundShade = 1.30f;
 
         public static float GroundShade(int level, int lowest, int highest) =>
             highest == lowest

@@ -330,6 +330,49 @@ namespace Tests.PlayMode
         }
 
         [Test]
+        public void EveryPiecesFlatTopReachesTheHexEdgeAndNothingOfItPokesPast()
+        {
+            MatchRoot root = BuildPlayfield();
+            HexMap map = root.Map;
+            int pieces = 0;
+
+            for (int row = 0; row < map.Height; row++)
+            {
+                for (int column = 0; column < map.Width; column++)
+                {
+                    MeshRenderer piece = root.Floor.TileAt(column, row);
+
+                    if (piece == null)
+                    {
+                        continue;
+                    }
+
+                    Vector3[] vertices = piece.GetComponent<MeshFilter>().sharedMesh.vertices;
+                    float top = vertices.Max(vertex => vertex.y);
+                    Vector3 centre = HexGeometry.ToWorld(column, row);
+                    float reach = vertices
+                        .Where(vertex => vertex.y > top - 0.001f)
+                        .Select(vertex => piece.transform.TransformPoint(vertex) - centre)
+                        .Max(offset => new Vector2(offset.x, offset.z).magnitude);
+
+                    Assert.That(
+                        reach,
+                        Is.EqualTo(HexGeometry.Circumradius).Within(Tolerance),
+                        "the flat top of the piece at " + column + "," + row + " stops short of the hex edge");
+
+                    Assert.That(
+                        vertices.Max(vertex => SeamlessPiece.HexDistance(piece.transform.TransformPoint(vertex) - centre)),
+                        Is.LessThanOrEqualTo((HexGeometry.AcrossFlats / 2f) + Tolerance),
+                        "the piece at " + column + "," + row + " pokes past the hex edge");
+
+                    pieces++;
+                }
+            }
+
+            Assert.That(pieces, Is.GreaterThan(0), "the committed board stands no pieces");
+        }
+
+        [Test]
         public void EveryGroundCellIsDrawnInItsOwnLevelsShade()
         {
             MatchRoot root = BuildPlayfield();

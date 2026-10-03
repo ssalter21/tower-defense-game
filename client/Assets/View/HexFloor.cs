@@ -58,6 +58,8 @@ namespace View
 
         private Material[] _shades = System.Array.Empty<Material>();
 
+        private readonly Dictionary<TilePiece, Mesh> _seamless = new Dictionary<TilePiece, Mesh>();
+
         /// <summary>The map this floor was drawn from.</summary>
         public HexMap Map { get; private set; }
 
@@ -233,7 +235,7 @@ namespace View
                     cellObject.transform.SetParent(transform, worldPositionStays: false);
                     cellObject.transform.localPosition = centre + (Vector3.up * TileSet.FaceOffset);
                     cellObject.transform.localRotation = Quaternion.Euler(0f, -60f * choice.Rotation, 0f);
-                    cellObject.AddComponent<MeshFilter>().sharedMesh = tiles.MeshFor(choice.Piece);
+                    cellObject.AddComponent<MeshFilter>().sharedMesh = SeamlessMeshFor(tiles, choice.Piece);
 
                     var renderer = cellObject.AddComponent<MeshRenderer>();
                     renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
@@ -245,6 +247,18 @@ namespace View
             }
 
             WorldBounds = new Bounds((min + max) * 0.5f, max - min);
+        }
+
+        private Mesh SeamlessMeshFor(TileSet tiles, TilePiece piece)
+        {
+            if (!_seamless.TryGetValue(piece, out Mesh mesh))
+            {
+                Mesh art = tiles.MeshFor(piece);
+                mesh = art != null ? SeamlessPiece.Of(art) : null;
+                _seamless[piece] = mesh;
+            }
+
+            return mesh;
         }
 
         private void Smooth(HexMap map, TileSet tiles, DressingSettings settings)
@@ -306,6 +320,11 @@ namespace View
             foreach (Material shade in _shades)
             {
                 Discard(shade);
+            }
+
+            foreach (Mesh piece in _seamless.Values)
+            {
+                Discard(piece);
             }
         }
 
