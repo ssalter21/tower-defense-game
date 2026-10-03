@@ -7,8 +7,6 @@ namespace View
     {
         private const float TopFaceTolerance = 0.001f;
 
-        private const float HexEdge = HexGeometry.AcrossFlats / 2f;
-
         public static Mesh Of(Mesh art)
         {
             Mesh piece = Object.Instantiate(art);
@@ -24,13 +22,19 @@ namespace View
             float top = vertices.Max(vertex => vertex.y);
             float topFaceEdge = vertices
                 .Where(vertex => vertex.y > top - TopFaceTolerance)
-                .Max(HexDistance);
+                .Max(HexGeometry.HexDistance);
+
+            if (topFaceEdge <= 0f)
+            {
+                return piece;
+            }
+
+            float stretchedToHexEdge = HexGeometry.Apothem / topFaceEdge;
 
             for (int index = 0; index < vertices.Length; index++)
             {
-                float distance = HexDistance(vertices[index]);
+                float distance = HexGeometry.HexDistance(vertices[index]);
                 float pulledUnderTopFace = distance > topFaceEdge ? topFaceEdge / distance : 1f;
-                float stretchedToHexEdge = HexEdge / topFaceEdge;
 
                 vertices[index] = Spread(vertices[index], pulledUnderTopFace * stretchedToHexEdge);
             }
@@ -39,19 +43,6 @@ namespace View
             piece.RecalculateBounds();
 
             return piece;
-        }
-
-        public static float HexDistance(Vector3 point)
-        {
-            float furthest = 0f;
-
-            for (int edge = 0; edge < 6; edge++)
-            {
-                float radians = (edge + 0.5f) * (Mathf.PI / 3f);
-                furthest = Mathf.Max(furthest, (point.x * Mathf.Sin(radians)) + (point.z * Mathf.Cos(radians)));
-            }
-
-            return furthest;
         }
 
         private static Vector3 Spread(Vector3 point, float by) => new Vector3(point.x * by, point.y, point.z * by);

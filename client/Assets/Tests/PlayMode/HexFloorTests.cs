@@ -361,8 +361,8 @@ namespace Tests.PlayMode
                         "the flat top of the piece at " + column + "," + row + " stops short of the hex edge");
 
                     Assert.That(
-                        vertices.Max(vertex => SeamlessPiece.HexDistance(piece.transform.TransformPoint(vertex) - centre)),
-                        Is.LessThanOrEqualTo((HexGeometry.AcrossFlats / 2f) + Tolerance),
+                        vertices.Max(vertex => HexGeometry.HexDistance(piece.transform.TransformPoint(vertex) - centre)),
+                        Is.LessThanOrEqualTo(HexGeometry.Apothem + Tolerance),
                         "the piece at " + column + "," + row + " pokes past the hex edge");
 
                     pieces++;
@@ -444,7 +444,7 @@ namespace Tests.PlayMode
 
             foreach (MeshRenderer piece in root.Floor.Tiles)
             {
-                Assert.That(piece.sharedMaterials, Has.None.Matches<Material>(material => materials.Skip(1).Contains(material)));
+                Assert.That(piece.sharedMaterials, Has.None.Matches<Material>(material => materials.Where((_, submesh) => submesh != HexSkin.BareSubmesh).Contains(material)));
             }
         }
 

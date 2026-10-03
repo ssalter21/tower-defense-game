@@ -49,6 +49,8 @@ namespace View
         /// </summary>
         public const float Circumradius = AcrossFlats / Root3;
 
+        public const float Apothem = AcrossFlats / 2f;
+
         /// <summary>
         /// How far apart two consecutive rows are, in metres. <c>1.5</c> times
         /// the circumradius, which for a two-metre hex is <c>sqrt(3)</c> —
@@ -227,6 +229,19 @@ namespace View
         /// corner i+1)</c> faces <c>+Y</c> under Unity's convention, which is
         /// why the tile mesh needs no normal-flipping special case.
         /// </remarks>
+        public static float HexDistance(Vector3 point)
+        {
+            float furthest = 0f;
+
+            for (int edge = 0; edge < Sim.Hex.DirectionCount; edge++)
+            {
+                Vector3 edgeMiddle = (Corner(edge) + Corner((edge + 1) % Sim.Hex.DirectionCount)) * 0.5f;
+                furthest = Mathf.Max(furthest, Vector3.Dot(new Vector3(point.x, 0f, point.z), edgeMiddle) / Apothem);
+            }
+
+            return furthest;
+        }
+
         public static Vector3 Corner(int index)
         {
             float radians = index * (Mathf.PI / 3f);

@@ -31,14 +31,6 @@ namespace View
     /// thing on the floor that carries no information about the match.
     /// </para>
     /// <para>
-    /// <b>Height is drawn, and it is not decoration.</b> A level is worth a
-    /// quarter of a hex of reach in the simulation, so a player who cannot see
-    /// which level a cell is on cannot read the range of a tower placed there.
-    /// The floor lifts each cell by <see cref="HexGeometry.LevelStep"/> per
-    /// level and reports a bounding box that includes the climb, so the camera
-    /// frames a board with relief as a board with relief.
-    /// </para>
-    /// <para>
     /// <b>The map arrives parsed.</b> This class never opens a file and never
     /// reads a character grid: it is handed a <see cref="HexMap"/> that the
     /// simulation's own parser produced, corridor assertion and all. A view-side
@@ -266,8 +258,6 @@ namespace View
             float rim = settings?.RimDrop ?? DressingSettings.Default.RimDrop;
             var skin = new HexSkin(map, _tiles, rim);
 
-            _shades = ShadesOfGround(map);
-
             var host = new GameObject("Skin");
             host.transform.SetParent(transform, worldPositionStays: false);
             host.AddComponent<MeshFilter>().sharedMesh =
@@ -279,27 +269,24 @@ namespace View
             Skin.receiveShadows = true;
         }
 
-        private Material[] ShadesOfGround(HexMap map)
-        {
-            (int lowest, int highest) = LevelsInUse(map);
-
-            return Enumerable.Range(lowest, highest - lowest + 1)
-                .Select(level => ViewMaterials.Shaded(
-                    GrassMaterial,
-                    SceneFraming.GroundShade(level, lowest, highest),
-                    "Ground at level " + level.ToString(CultureInfo.InvariantCulture)))
-                .ToArray();
-        }
-
         private Material[] SkinMaterials(HexMap map)
         {
-            int lowest = LevelsInUse(map).Lowest;
+            (int lowest, int highest) = LevelsInUse(map);
             Material[] materials = Enumerable.Repeat(GrassMaterial, HexSkin.SubmeshCount).ToArray();
+            var shades = new List<Material>();
 
-            for (int index = 0; index < _shades.Length; index++)
+            for (int level = lowest; level <= highest; level++)
             {
-                materials[HexSkin.ShadeSubmesh(lowest + index)] = _shades[index];
+                Material shade = ViewMaterials.Shaded(
+                    GrassMaterial,
+                    SceneFraming.GroundShade(level, lowest, highest),
+                    "Ground at level " + level.ToString(CultureInfo.InvariantCulture));
+
+                materials[HexSkin.ShadeSubmesh(level)] = shade;
+                shades.Add(shade);
             }
+
+            _shades = shades.ToArray();
 
             return materials;
         }
