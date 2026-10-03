@@ -2,12 +2,12 @@
     "shots": [
         {
             "id": "wave-bar",
-            "label": "Wave 4: every creep the purse covers in the bar, and the bar scrolls",
+            "label": "Wave 4: every creep the round offers in the bar, and the bar scrolls",
             "state": "build",
             "candidate": "as-built",
             "wave": 4,
             "png": "wave-bar.png",
-            "notes": "The overflow #270 played. Every creep the purse covers and the trailing empty one in a horizontal ScrollView, scrolled to the empty box. Wave 4 because the scripted player loses the board committing it under the table #297 signed; wave 9 held seventeen."
+            "notes": "The overflow #270 played. Every creep the round offers and the trailing empty one in a horizontal ScrollView, scrolled to the empty box. Wave 4 because the scripted player loses the board committing it under the table #297 signed; wave 9 held seventeen."
         },
         {
             "id": "offer",
