@@ -1,6 +1,6 @@
 # Agent instructions
 
-Working rules for anything — human or agent — doing execution work in this repo. Six rules, each because the
+Working rules for anything — human or agent — doing execution work in this repo. Seven rules, each because the
 obvious alternative fails quietly. **This file is loaded into every agent's context, so it holds instructions
 only**: a finding goes in [`docs/research/`](docs/research/), a reference in [`docs/`](docs/README.md).
 
@@ -65,6 +65,13 @@ passes every check on an artefact nobody has looked at. The evidence each row re
 | `client/`, non-visual | The three Unity runners, editor closed, counts reported | Full — the agent runs the runners itself |
 | `client/`, visual | A captured frame or sheet, and a person | Agent proposes; a person decides |
 | Art, names, numbers a player sees | Nothing automatable | Human only — the standing rules |
+
+## 7. A session hands off before its context reaches 300k tokens
+
+**Investigation across more than three files goes to a subagent** that returns findings, not file contents. A tool
+output saved to disk is searched with `grep` or read by line range; an existing file changes by Edit; a frame is
+cropped or halved unless full size is what is judged. **At about 250k tokens on `/context`, hand off:** commit,
+push, `/handoff` on the ticket, start fresh. A Unity batchmode run is a good stop, the tree frozen and committed.
 
 ## Waiting on Unity
 
