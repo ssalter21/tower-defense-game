@@ -53,11 +53,6 @@ a slow read at 1x and its bodies did not, which is the finding that put the
 circle on the floor in the first place. Read them as what the game looked like
 on the day they were played.
 
-For what the effects look like now, the fixture frames in the folder above are
-redrawn: [`four-lines-tick-0813.png`](../four-lines-tick-0813.png) and
-[`creep-auras-tick-0272.png`](../creep-auras-tick-0272.png) are the two to
-start with.
-
 ## What dates these, and what does not
 
 `tools/check-docs.ps1` names them exempt from the invariant that dates a picture against the content it draws,

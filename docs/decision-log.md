@@ -11,7 +11,7 @@ The entries are one file per month, so that a link to one lands on one month and
 |---|---|
 | [`decision-log/2026-08.md`](decision-log/2026-08.md) | 27 — the finished skeleton, the six reversals, the roster signed, the gates in and out, the fold, the collection imported |
 | [`decision-log/2026-09.md`](decision-log/2026-09.md) | 33 — the vision cut to its decisions, the roster widened and signed, the transformation, the raise, the bounty, the token, the shapes, the rebaseline, the harness removed, the board smoothed |
-| [`decision-log/2026-10.md`](decision-log/2026-10.md) | 1 — the contour off, the shades of green on |
+| [`decision-log/2026-10.md`](decision-log/2026-10.md) | 2 — the contour off, the shades of green on, the undrawable frames deleted |
 
 **What is *not* here:** where the vision replaces a claim in one of the five archived deep dives. That is
 [the archive index](archive/README.md#what-the-vision-overturns).
@@ -96,3 +96,4 @@ The entries are one file per month, so that a link to one lands on one month and
 ### October 2026
 
 - [3 October 2026 — the contour comes off, and a level reads by a subtle shade of green](decision-log/2026-10.md#3-october-2026--the-contour-comes-off-and-a-level-reads-by-a-subtle-shade-of-green)
+- [3 October 2026, later — the candidate and line frames are deleted, not kept as records](decision-log/2026-10.md#3-october-2026-later--the-candidate-and-line-frames-are-deleted-not-kept-as-records)

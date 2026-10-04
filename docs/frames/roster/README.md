@@ -299,7 +299,8 @@ roster's rulings on what these sheets asked are on the rows themselves in [the r
   Bishop and Artificer candidate moves at most 0.06% and the Bishop's anchor alone moves 0.016%. Issue
   #280's bands are 1–2% for anything on the ground and 0.004–0.030% for anything crossing the air, so
   the turret is the only one of the four that clears the second — and the other three are decided at
-  magnification or not at all. Those frames are [`rung-candidates/`](../rung-candidates/README.md).
+  magnification or not at all. Those frames were deleted on 3 October 2026
+  ([the decision log](../../decision-log/2026-10.md#3-october-2026-later--the-candidate-and-line-frames-are-deleted-not-kept-as-records)).
 
   **Where the Mage's flash leaves from is the fifth such question, and it is one a played frame does
   decide.** [`mage-anchor/`](../mage-anchor/README.md) draws the shipped anchor and three others

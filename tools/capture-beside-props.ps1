@@ -17,8 +17,8 @@
 # draws now is the baseline, which is the rule as built.
 #
 # THE TICKS ARE STILL-LIFE TICKS. A prop is a solid object on the ground, so
-# any tick with the towers on screen will do; 200 and 320 are the two
-# capture-rung-candidates.ps1 uses for the same kind of question, and the
+# any tick with the towers on screen will do; 200 and 320 are the two the
+# rung candidates were drawn at for the same kind of question, and the
 # second has bodies walking past.
 #
 # WIDE AND CLOSE BOTH. The wide frame is the framing the game is played at and
