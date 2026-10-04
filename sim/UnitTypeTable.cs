@@ -937,7 +937,7 @@ namespace Sim
         /// money is minted into the one purse, so a bounty past the row's cost
         /// would make killing the field's wave a better income than the round's
         /// own, and nothing downstream can see it: the return band is a leak
-        /// rate, the sweep's stand-in sends no paying row, and neither was taught
+        /// rate, the canned stand-in sends no paying row, and neither was taught
         /// to -- ruled on 12 September 2026, in <c>docs/decision-log.md</c>.
         /// This line is the whole fence. Equal is allowed: the ceiling says
         /// <i>not more than</i>, and how far under it a row sits is that row's

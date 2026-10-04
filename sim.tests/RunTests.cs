@@ -30,8 +30,8 @@ public class RunTests
     public static TheoryData<string, bool, bool, bool, bool> Scenarios => new()
     {
         { "normal play", true, true, false, false },
-        { "a sweep row", true, false, true, false },
-        { "a no-death harness run", false, false, true, false },
+        { "a scripted run", true, false, true, false },
+        { "a no-death run", false, false, true, false },
         { "a server re-validating", true, false, false, true },
     };
 
@@ -330,15 +330,15 @@ public class RunTests
     }
 
     [Fact]
-    public void Death_is_a_flag_so_a_sweep_row_always_yields_N_rounds_of_data()
+    public void Death_is_a_flag_so_a_no_death_run_always_yields_N_rounds_of_data()
     {
         // The same run that dies in its third round above, with the flag off:
         // ten rounds of data, health on the floor from the third onwards, and
-        // waves survived still saying two. A sweep needs the full row.
+        // waves survived still saying two. A scripted run wants the full ten.
         //
         // OBSERVED: have Run.IsOver report true at zero health whatever the
         // flag says. The round-count assertion goes red, 10 against 3, and a
-        // sweep's rows become as long as each row's luck.
+        // no-death run becomes as long as its luck.
         Run run = Played(TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1));
 
         Assert.Equal(10, run.Outcome.Rounds.Count);

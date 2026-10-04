@@ -52,13 +52,6 @@
     that has to agree with the runner's. A list that has to agree is the thing
     the declaration exists to remove.
 
-    simcli/SweepColumns.cs names the columns of the balance report in the order
-    they are written, and carries the row that is filled in by naming them.
-    GoldenSweepTests and CommandLineTests read reports by column, and a test that
-    counted its way to one would be another copy of that order. The separator
-    refusal lives in the same file, and calling it is the only way to watch it
-    work, for the reason SweepColumnsTests gives.
-
     simcli/BoardMap.cs draws the playfield as text: a pure function to a string,
     with no console, no state and nothing written down. Its layout is the thing
     about it that can be wrong, so the check is the text itself, asserted
@@ -84,7 +77,6 @@
   -->
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/ContentFiles.cs" Link="ContentFiles.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)../simcli/SweepColumns.cs" Link="SweepColumns.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/BoardMap.cs" Link="BoardMap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/MapPicture.cs" Link="MapPicture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/TextPanel.cs" Link="TextPanel.cs" />

@@ -6,7 +6,7 @@ namespace Sim.Tests;
 /// </summary>
 /// <remarks>
 /// One home for the swap, used by every fixture that plants text --
-/// <see cref="TheRuleset"/>, <see cref="TheSchedule"/>, <see cref="TheSweep"/>.
+/// <see cref="TheRuleset"/>, <see cref="TheSchedule"/>.
 /// The swap asserts that the text it is looking for is there, because a planted
 /// substring that matched nothing is a test comparing a file against itself.
 /// </remarks>

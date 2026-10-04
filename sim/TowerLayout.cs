@@ -115,16 +115,6 @@ namespace Sim
         /// separate thing the parser catches: somebody's authored content that
         /// stops mid-sentence.
         /// </para>
-        /// <para>
-        /// <b>What wants it is a wall of one attack type.</b> A sweep scores
-        /// its roster against a wall named for what it is built out of
-        /// (<see cref="SweepWall"/>), and the authored defense is a mix of two
-        /// -- so an opponent restricted to pierce that still opened behind two
-        /// mages would be a column whose label was a lie and whose zeros were
-        /// the seed's doing. Opening every restricted wall on nothing makes the
-        /// three columns equal by construction: same purse, same rounds, one
-        /// difference.
-        /// </para>
         /// </remarks>
         public static TowerLayout Nothing { get; } = new TowerLayout(new PlacedTower[0]);
 

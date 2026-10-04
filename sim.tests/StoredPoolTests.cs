@@ -12,8 +12,8 @@ namespace Sim.Tests;
 /// <para>
 /// <b>The last of these is the one that matters most.</b> Every run this
 /// repository has ever recorded was played against a pool with nothing stored
-/// in it, so a draw that moved for such a pool would retire the golden run, the
-/// committed sweep and every stored command stream at once. What pins that is
+/// in it, so a draw that moved for such a pool would retire the golden run and
+/// every stored command stream at once. What pins that is
 /// not a claim about the arithmetic but two runs held against each other: one
 /// pool, one seed, and a stage storing nobody.
 /// </para>
@@ -94,8 +94,8 @@ public class StoredPoolTests
         // The claim the whole change rests on. A pool with nothing stored at a
         // stage draws that stage exactly as it did before there were folders --
         // same stream, same members, same numbers -- so content/run-outcome.txt
-        // and the committed sweep are runs against a pool that happens to store
-        // nobody rather than runs under an older rule.
+        // is a run against a pool that happens to store nobody rather than a
+        // run under an older rule.
         //
         // OBSERVED: fill the top-up slots from the stored members rather than
         // from the stand-in. This goes red on the first assertion, where a

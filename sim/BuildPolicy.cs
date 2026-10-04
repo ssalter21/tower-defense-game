@@ -6,7 +6,7 @@ namespace Sim
 {
     /// <summary>
     /// A scripted player: one build phase, decided from the run in front of it
-    /// and the creep the sweep row is about.
+    /// and the creep it was pointed at.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -23,12 +23,12 @@ namespace Sim
     /// </para>
     /// </remarks>
     /// <param name="run">The run as it stands before this round, board and purse included.</param>
-    /// <param name="preferred">The type id of the creep the sweep row is about.</param>
+    /// <param name="preferred">The type id of the creep this player sends.</param>
     public delegate BuildPhase BuildPolicy(Run run, int preferred);
 
     /// <summary>
-    /// The scripted player the sweep has always used: it builds with half the
-    /// purse and spends the other half on the one creep its row is about.
+    /// The default scripted player: it builds with half the purse and spends
+    /// the other half on the one creep it was pointed at.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -52,10 +52,9 @@ namespace Sim
     /// one body is an investment rather than a waste.
     /// </para>
     /// <para>
-    /// <b>This is a decision and not the only one.</b> It is the default a
-    /// <see cref="SweepPlan"/> carries, which is what makes scoring the same
-    /// roster under a greedier build an argument to the plan rather than an edit
-    /// here.
+    /// <b>This is a decision and not the only one.</b> <see cref="AllInBot"/>
+    /// is the other, and naming both is what makes playing the same roster
+    /// under a greedier build an argument to a run rather than an edit here.
     /// </para>
     /// </remarks>
     public static class EvenShareBot
@@ -63,13 +62,10 @@ namespace Sim
         /// <summary>One build phase, decided from the round in front of it and from nothing else.</summary>
         /// <remarks>
         /// <b>One slot, which is why #191 did not touch this bot.</b> A slot's
-        /// position became its release order, and a sweep row is about one
-        /// creep -- so every wave this composes is one column and the order it
-        /// is in is the only order there is. That is not a gap in the bot: it
-        /// is what makes a row attributable to the creep it names. It <i>is</i>
-        /// a gap in the report, because nothing in <c>content/sweep.csv</c>
-        /// varies with how a wave is arranged, and the CSV carries a note
-        /// saying so rather than leaving somebody to find it.
+        /// position became its release order, and this player sends one creep
+        /// -- so every wave this composes is one column and the order it is in
+        /// is the only order there is. That is not a gap in the bot: it is what
+        /// makes a run of it attributable to the creep it names.
         /// </remarks>
         public static BuildPhase Decide(Run run, int preferred)
         {
@@ -94,7 +90,7 @@ namespace Sim
     /// <para>
     /// <b>It is the even-share bot's other extreme, and that is what it is
     /// for.</b> One splits the purse down the middle and the other refuses to
-    /// split it, so a sweep played twice says what the defensive half of a
+    /// split it, so the two played side by side say what the defensive half of a
     /// round is worth -- in rounds survived, in what a run took, and in what it
     /// therefore got paid. That question has no answer from one report however
     /// many seeds it is played over, because the share is not a column.
@@ -140,7 +136,7 @@ namespace Sim
             // adds to it. A creep is bought once and attacks every round after,
             // so a bot that sent only what it could afford this round would be
             // asking to send fewer than it carries -- which is refused, and
-            // rightly. A sweep row therefore measures a creep accumulating,
+            // rightly. A scripted run therefore fields a creep accumulating,
             // which is what a run of it now actually is.
             int held = run.Carrying.CountOf(preferred);
             int count = held + (gold / PriceOf(run.Costs, preferred));
@@ -171,7 +167,7 @@ namespace Sim
             }
 
             throw new SimulationException(
-                "A sweep was pointed at a roster whose type id "
+                "A scripted player was pointed at a roster whose type id "
                 + typeId.ToString(CultureInfo.InvariantCulture)
                 + " costs nothing to send. Every purchasable thing carries a price, because a leak charges "
                 + "health equal to what the creep cost one for one -- so a free creep is one a purse buys "
