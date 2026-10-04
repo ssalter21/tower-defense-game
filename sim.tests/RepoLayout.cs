@@ -73,7 +73,7 @@ public static class RepoLayout
     public static string DefenseFile => InContent(RunContentFiles.Defense);
 
     /// <summary>
-    /// The wave the sweep's canned field sends: a build phase's output rather
+    /// The wave the canned field sends: a build phase's output rather
     /// than the skeleton's authored match, which is a distinction that file's
     /// own header explains at length.
     /// </summary>
@@ -128,19 +128,6 @@ public static class RepoLayout
     /// nothing that checks this file regenerates it.
     /// </summary>
     public static string RunOutcomeFile => Path.Combine(ContentDirectory, "run-outcome.txt");
-
-    /// <summary>
-    /// The committed balance report: what the sweep said about the roster the
-    /// last time somebody regenerated it.
-    /// </summary>
-    /// <remarks>
-    /// Committed for the reason the run outcome is, one level up again: nobody
-    /// knows a creep's win rate until a few hundred runs of it have been played,
-    /// so a retune that moves the roster's ranking is a diff here rather than an
-    /// argument. Nothing that checks this file produces it --
-    /// <c>tools/run-sweep.ps1 -Regenerate</c> is the only writer.
-    /// </remarks>
-    public static string SweepFile => Path.Combine(ContentDirectory, "sweep.csv");
 
     /// <summary>
     /// The twelve-row eyeball checklist, and the one artefact in this

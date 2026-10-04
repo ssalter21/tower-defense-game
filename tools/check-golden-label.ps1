@@ -6,8 +6,8 @@
 .DESCRIPTION
     The golden artefacts are the files a run is compared against: the trace,
     the landmark table, the historical results under content/golden/, the
-    sweep, the run outcome, and the replay and command list the whole thing is
-    played from. Every other gate step asks whether the simulation still
+    run outcome, and the replay and command list the whole thing is played
+    from. Every other gate step asks whether the simulation still
     produces them. None of them can ask whether they were supposed to move,
     because a change to the rules plus a regeneration produces a green gate on
     all six matrix rows and nothing marks it -- and a gate that could go red on
@@ -68,7 +68,6 @@ $goldenPaths = @(
     'content/golden-trace.txt'
     'content/landmarks.txt'
     'content/golden/'
-    'content/sweep.csv'
     'content/run-outcome.txt'
     'content/match.replay'
     'content/run.commands'

@@ -10,7 +10,7 @@ The entries are one file per month, so that a link to one lands on one month and
 | Month | Entries |
 |---|---|
 | [`decision-log/2026-08.md`](decision-log/2026-08.md) | 27 — the finished skeleton, the six reversals, the roster signed, the gates in and out, the fold, the collection imported |
-| [`decision-log/2026-09.md`](decision-log/2026-09.md) | 32 — the vision cut to its decisions, the roster widened and signed, the transformation, the raise, the bounty, the token, the shapes, the rebaseline, the board smoothed |
+| [`decision-log/2026-09.md`](decision-log/2026-09.md) | 33 — the vision cut to its decisions, the roster widened and signed, the transformation, the raise, the bounty, the token, the shapes, the rebaseline, the harness removed, the board smoothed |
 
 **What is *not* here:** where the vision replaces a claim in one of the five archived deep dives. That is
 [the archive index](archive/README.md#what-the-vision-overturns).
@@ -89,4 +89,5 @@ The entries are one file per month, so that a link to one lands on one month and
 - [13 September 2026, later again — the capacity gate waits on the people playtest, and the run this ticket asked for is not played](decision-log/2026-09.md#13-september-2026-later-again--the-capacity-gate-waits-on-the-people-playtest-and-the-run-this-ticket-asked-for-is-not-played)
 - [13 September 2026, last — windup and backswing are signed on the sixteen rows, and on four of them the number is zero](decision-log/2026-09.md#13-september-2026-last--windup-and-backswing-are-signed-on-the-sixteen-rows-and-on-four-of-them-the-number-is-zero)
 - [13 September 2026, after the map — the vision is rebaselined on a playtest of six friends, and five claims reverse](decision-log/2026-09.md#13-september-2026-after-the-map--the-vision-is-rebaselined-on-a-playtest-of-six-friends-and-five-claims-reverse)
+- [28 September 2026 — the balance harness comes out until it is specified](decision-log/2026-09.md#28-september-2026--the-balance-harness-comes-out-until-it-is-specified)
 - [28 September 2026 — the board is smoothed by a skin, and a level reads by a contour](decision-log/2026-09.md#28-september-2026--the-board-is-smoothed-by-a-skin-and-a-level-reads-by-a-contour)

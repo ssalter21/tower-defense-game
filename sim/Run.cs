@@ -69,7 +69,7 @@ namespace Sim
     /// makes, one level up. Construct from the map, the rules, the unit table,
     /// the shape, the pool a field is drawn from, a seed, N, K and whether death
     /// ends it; hand <see cref="Advance"/> what the build phase decided; read the
-    /// <see cref="Outcome"/>. Normal play, a sweep row, a no-death harness run
+    /// <see cref="Outcome"/>. Normal play, a scripted run, a no-death run
     /// and a server re-validating a submitted run are those calls with different
     /// arguments. <b>None of them is a mode, a flag or a branch.</b>
     /// </para>
@@ -82,8 +82,8 @@ namespace Sim
     /// <para>
     /// <b>N, K and death are parameters and not constants.</b> Ten waves and ten
     /// opponents are this map's answers and both are expected to move; death is
-    /// an argument so that a sweep can run without it and always get N rounds of
-    /// data out of every row rather than a short row wherever a build failed.
+    /// an argument so that a scripted run can be played without it and always
+    /// yield N rounds rather than a short run wherever a build failed.
     /// </para>
     /// <para>
     /// <b>Health is denominated in gold and cannot be repaired.</b> A leaked
@@ -261,8 +261,8 @@ namespace Sim
             {
                 throw new SimulationException(
                     "This run has no last wave and death does not end it, so no round in it can ever be the "
-                    + "last. A run is bounded by its wave count or by its health pool, and a sweep that "
-                    + "lifts both is a loop rather than a row.");
+                    + "last. A run is bounded by its wave count or by its health pool, and a run that "
+                    + "lifts both is a loop rather than a run.");
             }
 
             Seed = seed;
@@ -599,7 +599,7 @@ namespace Sim
         /// <b>This is the route by which a round is watched.</b>
         /// <see cref="Advance"/> resolves the wave against every member of the
         /// field in locals and lets them go, which is right: a run that kept its
-        /// matches would hold N times K of them by the end, and a sweep that
+        /// matches would hold N times K of them by the end, and a tool that
         /// plays a hundred thousand runs overnight would carry a match for every
         /// pairing in every one of them and draw not one. A client needs exactly
         /// one, so it asks for the one it means to show. See

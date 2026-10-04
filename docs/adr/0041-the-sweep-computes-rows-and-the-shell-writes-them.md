@@ -1,5 +1,10 @@
 # 0041 — The sweep computes rows and the shell writes them, and every rate arrives with its operands
 
+> **Retired on 28 September 2026.** The balance harness -- `Sweep`, `SweepPlan`, `SweepReport`, the `sweep` verb,
+> `SweepCsv`, `SweepColumns`, `content/sweep.csv` and `tools/run-sweep.ps1` -- is deleted until
+> [its specification](../specs/sweep-harness.md) says what it is for. Read the rest as a record of the
+> first build's shape; the ruling is in [the decision log](../decision-log/2026-09.md#28-september-2026--the-balance-harness-comes-out-until-it-is-specified).
+
 The balance harness is a CLI mode and a comma-separated file rather than a project, because a match resolves in
 under three milliseconds and a ten-thousand-matchup sweep is therefore seconds of compute rather than a night
 of it. That makes the tool worth building before the roster is large, and it is why it lands here rather than

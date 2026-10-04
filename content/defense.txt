@@ -25,7 +25,7 @@
 # top of them. On this content round one buys one forty-gold archer out of an
 # opening share of 50 gold, but that is a fact about this file and not a rule.
 # The wall a growing wave is measured against therefore grows too, which is the
-# whole reason a late round of content/sweep.csv is worth reading. These six
+# whole reason a late round is worth measuring at all. These six
 # stand beside that opening purse rather than out of it -- a member is a
 # RECORDED round and not a run played from nothing, and 344 gold of towers
 # could not be bought out of an opening hundred anyway.
