@@ -121,6 +121,43 @@ namespace Tests.EditMode
                 "Drawing a baked board and baking it again produced different text.");
         }
 
+        [Test]
+        public void TheCommittedBoardUnderTheShippedDressingSpeaksForTheSameCellsAsTheFile()
+        {
+            HexMap map = StreamingContent.ReadMap();
+            DressingSettings shipped = BoardDressingTools.Settings();
+            string path = System.IO.Path.Combine(
+                System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "..", "..")),
+                BoardDressingTools.DressingPath);
+            string committed = System.IO.File.ReadAllText(path);
+            BoardDressing authored = BoardDressing.Parse(BoardDressingTools.DressingPath, committed);
+
+            _host = new GameObject("Bake Shipped");
+
+            HexFloor floor = HexFloor.Build(
+                _host.transform,
+                map,
+                MatchSceneBuilder.Tiles(),
+                MatchSceneBuilder.Scenery().With(SceneryCatalogue.Bind(authored.Names())),
+                shipped,
+                authored);
+
+            BoardDressing baked = BoardDressing.Parse(
+                "baked", BoardDressingTools.TextFor(floor, map, shipped));
+
+            Assert.That(
+                baked.CellCount,
+                Is.EqualTo(authored.CellCount),
+                "Baking the committed board under the shipped dressing settings spoke for "
+                + baked.CellCount + " cells where " + BoardDressingTools.DressingPath + " speaks for "
+                + authored.CellCount + ", so the file and the asset disagree about what stands.");
+
+            Assert.That(
+                baked.HasSky,
+                Is.EqualTo(authored.HasSky),
+                "The bake and " + BoardDressingTools.DressingPath + " disagree about whether the sky is authored.");
+        }
+
         private HexFloor Drawn(out HexMap map)
         {
             map = StreamingContent.ReadMap();

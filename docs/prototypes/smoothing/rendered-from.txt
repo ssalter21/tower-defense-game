@@ -12,14 +12,6 @@
 
 picture  check-match.png                 0D3C9E832B11C66C
 picture  check-plan.png                  0D3C9E832B11C66C
-picture  pieces-band-match.png           0D3C9E832B11C66C
-picture  pieces-band-plan.png            0D3C9E832B11C66C
-picture  pieces-both-match.png           0D3C9E832B11C66C
-picture  pieces-both-plan.png            0D3C9E832B11C66C
-picture  pieces-contour-match.png        0D3C9E832B11C66C
-picture  pieces-contour-plan.png         0D3C9E832B11C66C
-picture  pieces-plain-match.png          0D3C9E832B11C66C
-picture  pieces-plain-plan.png           0D3C9E832B11C66C
 picture  sheet-match.png                 0D3C9E832B11C66C
 picture  sheet-plan.png                  0D3C9E832B11C66C
 picture  skin-band-match.png             0D3C9E832B11C66C

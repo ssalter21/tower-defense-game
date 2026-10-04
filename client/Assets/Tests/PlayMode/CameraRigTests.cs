@@ -411,7 +411,10 @@ namespace Tests.PlayMode
                 .Where(t => !t.IsChildOf(rig.transform))
                 .ToArray();
 
-            Assert.That(others.Length, Is.GreaterThan(100), "The floor should be under here.");
+            Assert.That(
+                others.Length,
+                Is.GreaterThanOrEqualTo(root.Floor.TileCount + 2),
+                "The floor should be under here: every road piece, the skin and the contours.");
 
             Matrix4x4[] before = others.Select(t => t.localToWorldMatrix).ToArray();
 
@@ -456,22 +459,39 @@ namespace Tests.PlayMode
                 Is.Empty,
                 "a world-space canvas is a flat card");
 
+            float relief = (Levels(root.Map) * HexGeometry.LevelStep)
+                + DressingSettings.Default.RimDrop
+                + HexGeometry.TileBody
+                + HexSkin.ContourLift;
+
             foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(includeInactive: true))
             {
                 Assert.That(renderer, Is.TypeOf<MeshRenderer>(), renderer.name + " is not a mesh renderer");
 
+                bool contour = renderer == root.Floor.Contours;
+
                 Assert.That(
                     renderer.shadowCastingMode,
-                    Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.On),
-                    renderer.name + " casts no shadow");
+                    Is.EqualTo(contour
+                        ? UnityEngine.Rendering.ShadowCastingMode.Off
+                        : UnityEngine.Rendering.ShadowCastingMode.On),
+                    renderer.name + (contour ? " casts a shadow" : " casts no shadow"));
 
-                Assert.That(renderer.receiveShadows, Is.True, renderer.name + " receives no shadow");
+                Assert.That(renderer.receiveShadows, Is.EqualTo(!contour), renderer.name + "'s shadow receiving is wrong");
 
                 Mesh mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
 
-                // Lying in the ground plane, which is the one orientation a
-                // camera-facing card can never have.
-                Assert.That(mesh.bounds.size.y, Is.EqualTo(0f).Within(0.001f), renderer.name + " is standing up");
+                if (renderer == root.Floor.Skin || contour)
+                {
+                    Assert.That(mesh.bounds.size.y, Is.LessThanOrEqualTo(relief + 0.001f), renderer.name + " is taller than the board");
+                }
+                else
+                {
+                    // Lying in the ground plane, which is the one orientation a
+                    // camera-facing card can never have.
+                    Assert.That(mesh.bounds.size.y, Is.EqualTo(0f).Within(0.001f), renderer.name + " is standing up");
+                }
+
                 Assert.That(mesh.bounds.size.x, Is.GreaterThan(0f));
                 Assert.That(mesh.bounds.size.z, Is.GreaterThan(0f));
             }
@@ -616,6 +636,22 @@ namespace Tests.PlayMode
             }
 
             return hashes.ToArray();
+        }
+
+        private static int Levels(HexMap map)
+        {
+            int lowest = int.MaxValue, highest = int.MinValue;
+
+            for (int row = 0; row < map.Height; row++)
+            {
+                for (int column = 0; column < map.Width; column++)
+                {
+                    lowest = System.Math.Min(lowest, map.LevelAt(column, row));
+                    highest = System.Math.Max(highest, map.LevelAt(column, row));
+                }
+            }
+
+            return highest - lowest;
         }
 
         /// <summary>The four corners of a bounds in the ground plane.</summary>

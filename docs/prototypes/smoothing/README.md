@@ -1,11 +1,18 @@
 # The board-smoothing sheet
 
-Two ways of smoothing the board's steps, rendered on the committed board beside the board as it ships, each
-bare and under each legibility aid, from two cameras. **A prototype for one decision**, issue #329 on the
+Two ways of smoothing the board's steps, rendered on the committed board beside the board as it shipped then,
+each bare and under each legibility aid, from two cameras. **A prototype for one decision**, issue #329 on the
 [board-smoothing map](https://github.com/ssalter21/tower-defense-game/issues/315): which candidate ships, and how
-a level stays readable on it. Nothing here is the game. The code that draws the candidates lives in
-`client/Assets/Editor/SmoothingCandidates.cs` and is torn out once the choice is made; regenerate the pictures
-with `tools/capture-smoothing-sheet.ps1` (editor closed — it is batchmode).
+a level stays readable on it.
+
+**The skin with the contour shipped** — the `skin-contour` frame, second row, first column of each sheet —
+decided on [issue #330](https://github.com/ssalter21/tower-defense-game/issues/330) and built on
+[issue #331](https://github.com/ssalter21/tower-defense-game/issues/331); the record is
+[ADR-0065](../../adr/0065-the-ground-is-one-skin-regenerated-from-the-map.md). The code that drew the
+candidates and the capture that drew this sheet went out with the loser, so **the sheet is a record and cannot
+be regenerated**; the pieces' own frames went with them, and the sheets and the checks still show all nine. The
+board as it ships is photographed by `tools/capture-board.ps1` into
+[`docs/frames/board/`](../../frames/board/README.md).
 
 **Every frame is the same board.** `content/map.txt`'s 247 cells, its 51-cell corridor and the level of every
 cell are read through `HexMap.ParseUtf8` and never touched, so anything that differs between two frames is the
@@ -19,8 +26,8 @@ move. The scenery is the shipped dressing in every frame too, which matters belo
 | `sheet-match.png` | Nine frames from the shipped camera, at half size. **Judge the look here** — this is what a player sees. |
 | `sheet-plan.png` | The same nine from straight above. **Judge legibility here** — from overhead, height is invisible and the aids carry the whole reading. |
 | `check-match.png`, `check-plan.png` | The same nine, cropped around the corridor's steepest cell at twice the size. The render checked against itself: the level change at that cell has to be visible in every one. |
-| `<variant>-<camera>.png` | The eighteen frames at 1600x900, under the names below. |
-| `smoothing.txt` | What each candidate cost, counted off the meshes by the capture rather than typed; the cell the checks crop; the cameras. |
+| `<variant>-<camera>.png` | The `today-*` and `skin-*` frames at 1600x900, under the names below; the pieces' frames were removed with the pieces. |
+| `smoothing.txt` | What each candidate cost, counted off the meshes by the capture rather than typed, which is where the pieces' thirteen-shape census survives; the cell the checks crop; the cameras. |
 
 Both sheets and both checks read the same way, left to right, top to bottom:
 
@@ -42,13 +49,10 @@ runs up to each at the height the piece actually has there, ramps included. The 
 dressing's rim drop and hangs a skirt of earth. It is flat shaded on purpose, so a plateau reads flat; smooth
 normals are one line if anyone wants the blob.
 
-**The pieces** keep one tile per cell. A ground cell lifts the corners it shares with a neighbour one level up
-to that neighbour's height, so the slope lives in the lower cell and the higher cell stays a flat plateau —
-which is how the pack's own ramp works. A neighbour two or more levels up is left as a cliff, though this board
-has none. A cell with nothing lifted and no rim edge wears the pack's flat grass tile unchanged; every other cell
-is an authored piece, and **the census of distinct pieces is the candidate's cost**: on this board, thirteen
-shapes (rotations counted once), of which the pack ships none — its slopes are planar and lip a quarter level at
-their sides, which is the disagreement at three-way corners the sheet exists to remove.
+**The pieces** kept one tile per cell, lifting the corners a ground cell shares with a neighbour one level up,
+so the slope lived in the lower cell and the higher stayed flat. Its cost was the census of distinct pieces a
+board needs authored — thirteen on this one, rotations counted once, of which the pack ships none — and a new
+map can need shapes this one never did. It lost; the census is in `smoothing.txt`.
 
 Both wear the grass and earth swatches sampled off the pack's own grass tile, so their colours are whatever
 atlas the board is wearing — the Summer one.

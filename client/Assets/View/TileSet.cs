@@ -4,7 +4,7 @@ using UnityEngine;
 namespace View
 {
     /// <summary>
-    /// The eleven models a floor is built from, and the material they wear.
+    /// The eight models a floor is built from, and the material they wear.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -34,7 +34,7 @@ namespace View
     public sealed class TileSet
     {
         [SerializeField]
-        [Tooltip("Plain ground, no path. KayKit hex_grass.")]
+        [Tooltip("Plain ground, no path. KayKit hex_grass. Not laid as a tile: the skin samples its grass and earth swatches off it.")]
         private Mesh ground;
 
         [SerializeField]
@@ -60,18 +60,6 @@ namespace View
         [SerializeField]
         [Tooltip("A straight climbing one level, which is half a block. KayKit hex_road_A_sloped_low.")]
         private Mesh straightHalfRamp;
-
-        [SerializeField]
-        [Tooltip("Pathless ground climbing one level. KayKit hex_grass_sloped_low.")]
-        private Mesh groundSlopeLow;
-
-        [SerializeField]
-        [Tooltip("Pathless ground climbing a whole block. KayKit hex_grass_sloped_high.")]
-        private Mesh groundSlopeHigh;
-
-        [SerializeField]
-        [Tooltip("A metre of earth with no walkable face, stacked to make a cliff. KayKit hex_grass_bottom.")]
-        private Mesh cliff;
 
         [SerializeField]
         [Tooltip("Standing water, its surface a little below the tile face. KayKit hex_water.")]
@@ -107,9 +95,6 @@ namespace View
             Mesh deadEnd,
             Mesh straightRamp,
             Mesh straightHalfRamp,
-            Mesh groundSlopeLow,
-            Mesh groundSlopeHigh,
-            Mesh cliff,
             Mesh water,
             Material surface) =>
             new TileSet
@@ -121,9 +106,6 @@ namespace View
                 deadEnd = deadEnd,
                 straightRamp = straightRamp,
                 straightHalfRamp = straightHalfRamp,
-                groundSlopeLow = groundSlopeLow,
-                groundSlopeHigh = groundSlopeHigh,
-                cliff = cliff,
                 water = water,
                 surface = surface,
             };
@@ -152,9 +134,6 @@ namespace View
                 deadEnd = generated,
                 straightRamp = generated,
                 straightHalfRamp = generated,
-                groundSlopeLow = generated,
-                groundSlopeHigh = generated,
-                cliff = generated,
                 water = generated,
                 road = roadMaterial,
                 grass = grassMaterial,
@@ -177,9 +156,6 @@ namespace View
             && deadEnd != null
             && straightRamp != null
             && straightHalfRamp != null
-            && groundSlopeLow != null
-            && groundSlopeHigh != null
-            && cliff != null
             && water != null
             && surface != null;
 
@@ -194,9 +170,6 @@ namespace View
                 TilePiece.DeadEnd => deadEnd,
                 TilePiece.StraightRamp => straightRamp,
                 TilePiece.StraightHalfRamp => straightHalfRamp,
-                TilePiece.GroundSlopeLow => groundSlopeLow,
-                TilePiece.GroundSlopeHigh => groundSlopeHigh,
-                TilePiece.Cliff => cliff,
                 TilePiece.Water => water,
                 _ => throw new ArgumentOutOfRangeException(nameof(piece), piece, "No tile for this piece."),
             };
@@ -221,16 +194,12 @@ namespace View
         /// </summary>
         /// <remarks>
         /// Written out rather than compared against
-        /// <see cref="TilePiece.Ground"/>, which is what it used to be: the
-        /// grass slopes and the cliff column are pathless too, and a blockout
-        /// that drew them as road would paint a brown streak up every hillside
-        /// on a checkout with no art imported.
+        /// <see cref="TilePiece.Ground"/>, which is what it used to be:
+        /// standing water is pathless too, and a blockout that drew it as road
+        /// would paint a brown pool on a checkout with no art imported.
         /// </remarks>
         private static bool IsGround(TilePiece piece) =>
             piece == TilePiece.Ground
-            || piece == TilePiece.GroundSlopeLow
-            || piece == TilePiece.GroundSlopeHigh
-            || piece == TilePiece.Cliff
             || piece == TilePiece.Water;
 
         /// <summary>

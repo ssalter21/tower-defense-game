@@ -24,6 +24,6 @@ MonoBehaviour:
   cloudCount: 4
   cloudHeight: 6
   cloudSpread: 2.5
-  ridgeChance: 0.44
+  ridgeChance: 0
   rimDrop: 0.8
   waterLevel: -1

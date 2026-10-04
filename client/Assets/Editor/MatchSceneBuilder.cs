@@ -1170,9 +1170,6 @@ namespace View.Editor
             (TilePiece.DeadEnd, "deadEnd", "Assets/Art/Tiles/hex_road_M.fbx"),
             (TilePiece.StraightRamp, "straightRamp", "Assets/Art/Tiles/hex_road_A_sloped_high.fbx"),
             (TilePiece.StraightHalfRamp, "straightHalfRamp", "Assets/Art/Tiles/hex_road_A_sloped_low.fbx"),
-            (TilePiece.GroundSlopeLow, "groundSlopeLow", "Assets/Art/Tiles/hex_grass_sloped_low.fbx"),
-            (TilePiece.GroundSlopeHigh, "groundSlopeHigh", "Assets/Art/Tiles/hex_grass_sloped_high.fbx"),
-            (TilePiece.Cliff, "cliff", "Assets/Art/Tiles/hex_grass.fbx"),
             (TilePiece.Water, "water", "Assets/Art/Tiles/hex_water.fbx"),
         };
 
@@ -1416,9 +1413,6 @@ namespace View.Editor
                 TileMesh(TilePiece.DeadEnd),
                 TileMesh(TilePiece.StraightRamp),
                 TileMesh(TilePiece.StraightHalfRamp),
-                TileMesh(TilePiece.GroundSlopeLow),
-                TileMesh(TilePiece.GroundSlopeHigh),
-                TileMesh(TilePiece.Cliff),
                 TileMesh(TilePiece.Water),
                 surface);
 
@@ -1455,6 +1449,10 @@ namespace View.Editor
 
             property.objectReferenceValue = DressingAsset();
         }
+
+        public static DressingSettings Dressing() =>
+            AssetDatabase.LoadAssetAtPath<BoardDressingAsset>(DressingAssetPath)?.Settings()
+            ?? DressingSettings.Default;
 
         /// <summary>The dressing settings, made at their defaults on first run.</summary>
         private static BoardDressingAsset DressingAsset()

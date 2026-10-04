@@ -46,7 +46,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 # build gate does not run.
 $declaration = @'
   8  client/Assets/Tests/EditMode/BesideStandingTests.cs
-  4  client/Assets/Tests/EditMode/BoardBakeTests.cs
+  5  client/Assets/Tests/EditMode/BoardBakeTests.cs
   7  client/Assets/Tests/EditMode/BoardDraftTests.cs
  10  client/Assets/Tests/EditMode/BoardDressingTests.cs
   3  client/Assets/Tests/EditMode/BoardPreviewTests.cs
@@ -67,7 +67,7 @@ $declaration = @'
  18  client/Assets/Tests/PlayMode/BuildingTests.cs
  11  client/Assets/Tests/PlayMode/CameraRigTests.cs
   6  client/Assets/Tests/PlayMode/ChromeLayoutTests.cs
-  9  client/Assets/Tests/PlayMode/HexFloorTests.cs
+ 12  client/Assets/Tests/PlayMode/HexFloorTests.cs
   7  client/Assets/Tests/PlayMode/HexPickingTests.cs
   5  client/Assets/Tests/PlayMode/HorizonTests.cs
   2  client/Assets/Tests/PlayMode/LocomotionTests.cs

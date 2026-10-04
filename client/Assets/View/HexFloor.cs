@@ -1,25 +1,26 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Sim;
 using UnityEngine;
 
 namespace View
 {
     /// <summary>
-    /// The playfield you can look at: one tile per cell of the map grid, a piece
-    /// of road along the corridor and ground everywhere else, each standing at
-    /// the tier the map gives it.
+    /// The playfield you can look at: the pack's road pieces along the
+    /// corridor, each standing at the tier the map gives it, and one skin of
+    /// ground everywhere else, met to each piece at the height it has at its
+    /// edge. See ADR-0065.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>The renderer walks the grid, and that is the whole of it.</b> Every
-    /// cell gets exactly one tile; which model, and how far it is turned, comes
-    /// from <see cref="RoadTiling"/>; where it stands comes from
-    /// <see cref="HexGeometry"/>. No variation and no special case for the ends
+    /// <b>The renderer walks the grid, and that is the whole of it.</b> Which
+    /// piece a corridor cell wears, and how far it is turned, comes from
+    /// <see cref="RoadTiling"/>; where it stands comes from
+    /// <see cref="HexGeometry"/>; the ground between is <see cref="HexSkin"/>,
+    /// regenerated from the map. No variation and no special case for the ends
     /// of the corridor — anything of that sort would be a second place the map
-    /// is interpreted, and the point of this class is that there is not one. The
-    /// choosing lives in <see cref="RoadTiling"/> rather than here precisely so
-    /// that it can be tested without a scene.
+    /// is interpreted, and the point of this class is that there is not one.
     /// </para>
     /// <para>
     /// <b>Scenery is drawn here and decided elsewhere, for the same reason.</b>
@@ -33,9 +34,10 @@ namespace View
     /// <b>Height is drawn, and it is not decoration.</b> A level is worth a
     /// quarter of a hex of reach in the simulation, so a player who cannot see
     /// which level a cell is on cannot read the range of a tower placed there.
-    /// The floor lifts each tile by <see cref="HexGeometry.LevelStep"/> per
-    /// level and reports a bounding box that includes the climb, so the camera
-    /// frames a board with relief as a board with relief.
+    /// The floor lifts each cell by <see cref="HexGeometry.LevelStep"/> per
+    /// level, lays a contour along every edge where the level changes, and
+    /// reports a bounding box that includes the climb, so the camera frames a
+    /// board with relief as a board with relief.
     /// </para>
     /// <para>
     /// <b>The map arrives parsed.</b> This class never opens a file and never
@@ -55,23 +57,29 @@ namespace View
 
         private Transform _sky;
 
+        private Material _ink;
+
         /// <summary>The map this floor was drawn from.</summary>
         public HexMap Map { get; private set; }
 
-        /// <summary>The tile renderers, in row-major order — the grid's order.</summary>
-        public MeshRenderer[] Tiles => _tiles;
+        /// <summary>The pieces standing on the floor, in row-major order — the grid's order, skipping the skinned cells.</summary>
+        public IEnumerable<MeshRenderer> Tiles => _tiles.Where(tile => tile != null);
 
-        /// <summary>How many tiles there are. Always <c>width * height</c>.</summary>
-        public int TileCount => _tiles.Length;
+        /// <summary>How many pieces stand on the floor: the corridor's, and any cell under the water line.</summary>
+        public int TileCount => _tiles.Count(tile => tile != null);
+
+        public MeshRenderer Skin { get; private set; }
+
+        public MeshRenderer Contours { get; private set; }
 
         /// <summary>The material a corridor cell is drawn with.</summary>
         public Material RoadMaterial { get; private set; }
 
-        /// <summary>The material every other cell is drawn with.</summary>
+        /// <summary>The material the ground is drawn with.</summary>
         public Material GrassMaterial { get; private set; }
 
         /// <summary>
-        /// The floor's extent in world space, taken from where the tiles
+        /// The floor's extent in world space, taken from where the cells
         /// actually are. The camera frames this, so a bug in
         /// <see cref="HexGeometry"/> shows up as a badly framed shot rather than
         /// as a number nobody checks.
@@ -96,40 +104,30 @@ namespace View
 
             var floor = host.AddComponent<HexFloor>();
             floor.Draw(map, tiles, settings);
-            floor.Underpin(map, tiles, settings);
+            floor.Smooth(map, tiles, settings);
             floor.Scatter(map, scenery, settings, dressing);
 
             return floor;
         }
 
-        /// <summary>The tile at a column and row of the authored grid.</summary>
+        /// <summary>The piece standing at a column and row of the authored grid, or null where the skin is the ground.</summary>
         public MeshRenderer TileAt(int column, int row) => _tiles[(row * Map.Width) + column];
 
         /// <summary>
-        /// Which piece was drawn at a cell. Asked of the renderer rather than
+        /// Which piece a cell was given. Asked of the floor rather than
         /// recomputed, so a test can catch the floor disagreeing with the grid
         /// it was drawn from.
         /// </summary>
         public TilePiece PieceAt(int column, int row) => _pieces[(row * Map.Width) + column];
 
         /// <summary>
-        /// True if the tile at this cell is drawn as road.
+        /// True if the cell is drawn as road.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// Read off the piece rather than off the material, because a set of
-        /// real tiles wears one atlas everywhere and the material stopped being
-        /// able to tell road from ground the moment the blockout did.
-        /// </para>
-        /// <para>
-        /// <b>And read off the edge table rather than by comparing against
-        /// <see cref="TilePiece.Ground"/>, which is what it used to do.</b> A
-        /// piece has road on it exactly when its road meets an edge, and that
-        /// table is already the one place the answer lives. The comparison was
-        /// right for as long as <c>Ground</c> was the only pathless piece; the
-        /// grass slopes made it wrong, and every ground cell on a hillside
-        /// started reporting itself as corridor.
-        /// </para>
+        /// Read off the edge table rather than off the material, because a set
+        /// of real tiles wears one atlas everywhere: a piece has road on it
+        /// exactly when its road meets an edge, and that table is already the
+        /// one place the answer lives.
         /// </remarks>
         public bool IsRoadTile(int column, int row) => RoadTiling.EdgesOf(PieceAt(column, row)) != 0;
 
@@ -218,170 +216,108 @@ namespace View
                     TileChoice choice = RoadTiling.For(map, column, row);
                     int level = map.LevelAt(column, row);
 
-                    // The water line is a dressing decision, so it is applied
-                    // here rather than in RoadTiling, which answers only what
-                    // the map says. Flat ground under the line goes to water; a
-                    // slope keeps its slope, which is what a shore looks like.
                     if (choice.Piece == TilePiece.Ground && level <= waterLine)
                     {
                         choice = new TileChoice(TilePiece.Water, 0);
                     }
 
                     Vector3 centre = HexGeometry.ToWorld(column, row, level);
-                    MapCell cell = map.CellAt(column, row);
 
-                    var cellObject = new GameObject(Name(column, row, cell));
+                    _pieces[(row * map.Width) + column] = choice.Piece;
+                    min = Vector3.Min(min, centre - HalfTile);
+                    max = Vector3.Max(max, centre + HalfTile);
+
+                    if (choice.Piece == TilePiece.Ground)
+                    {
+                        continue;
+                    }
+
+                    var cellObject = new GameObject(Name(column, row, map.CellAt(column, row)));
                     cellObject.transform.SetParent(transform, worldPositionStays: false);
                     cellObject.transform.localPosition = centre + (Vector3.up * TileSet.FaceOffset);
-
-                    // A sixth of a turn per step, and negative because Unity
-                    // turns clockwise seen from above while the simulation
-                    // counts its six directions the other way.
-                    cellObject.transform.localRotation =
-                        Quaternion.Euler(0f, -60f * choice.Rotation, 0f);
-
+                    cellObject.transform.localRotation = Quaternion.Euler(0f, -60f * choice.Rotation, 0f);
                     cellObject.AddComponent<MeshFilter>().sharedMesh = tiles.MeshFor(choice.Piece);
 
                     var renderer = cellObject.AddComponent<MeshRenderer>();
-
-                    // Real shadows, cast and received by real geometry. Nothing
-                    // in this project is allowed a painted-on one.
                     renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                     renderer.receiveShadows = true;
                     renderer.sharedMaterial = tiles.MaterialFor(choice.Piece);
 
                     _tiles[(row * map.Width) + column] = renderer;
-                    _pieces[(row * map.Width) + column] = choice.Piece;
-
-                    min = Vector3.Min(min, centre - HalfTile);
-                    max = Vector3.Max(max, centre + HalfTile);
                 }
             }
 
             WorldBounds = new Bounds((min + max) * 0.5f, max - min);
         }
 
-        /// <summary>
-        /// Stacks bare columns of earth under any tile whose drop to a
-        /// neighbour is deeper than the tile's own body, so that a cliff is a
-        /// cliff rather than a plate hanging over a hole.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>A tile carries one metre of earth and a level is now half of
-        /// one.</b> That covers a drop of two levels exactly and anything
-        /// shallower with room to spare, which is most of a graded board and
-        /// costs nothing. It stops covering at three levels, and the daylight
-        /// under the rim is the failure this closes: one more copy of
-        /// <c>hex_grass_bottom</c> per further metre, hung straight down from
-        /// where the body ran out.
-        /// </para>
-        /// <para>
-        /// <b>The depth is measured against the lowest neighbour and not
-        /// against the board.</b> A ridge standing four levels over the valley
-        /// on one side and one level over the shelf on the other needs the
-        /// column the valley asks for, and running every cell down to the
-        /// board's floor instead would bury the whole map in a solid block that
-        /// nothing can see into and every shadow lands on.
-        /// </para>
-        /// <para>
-        /// <b>The rim is a separate number.</b> Off the grid there is no
-        /// neighbour to measure against, so how far the board's edge falls away
-        /// is a decision rather than a consequence, and
-        /// <see cref="DressingSettings.RimDrop"/> is where it is made. It is
-        /// what makes the board read as a piece of country lifted out of a
-        /// landscape rather than as a sheet of tiles.
-        /// </para>
-        /// <para>
-        /// <b>The columns are not tiles.</b> They are not counted in
-        /// <see cref="TileCount"/>, never returned by <see cref="TileAt"/> and
-        /// never picked, because a thing a player can click is a thing the
-        /// simulation has to have an opinion about, and the simulation has no
-        /// idea these exist.
-        /// </para>
-        /// </remarks>
-        private void Underpin(HexMap map, TileSet tiles, DressingSettings settings)
+        private void Smooth(HexMap map, TileSet tiles, DressingSettings settings)
         {
-            Mesh mesh = tiles.MeshFor(TilePiece.Cliff);
-            Material surface = tiles.MaterialFor(TilePiece.Cliff);
+            float rim = settings?.RimDrop ?? DressingSettings.Default.RimDrop;
+            var skin = new HexSkin(map, _tiles, rim);
 
-            if (mesh == null || surface == null)
+            Skin = Host("Skin", skin.Ground(HexSkin.Swatches.SampledFrom(tiles.MeshFor(TilePiece.Ground))), GrassMaterial);
+            Skin.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            Skin.receiveShadows = true;
+
+            _ink = ViewMaterials.Matte("Contour", SceneFraming.ContourColor);
+            Contours = Host("Contours", skin.Contours(), _ink);
+            Contours.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            Contours.receiveShadows = false;
+        }
+
+        private MeshRenderer Host(string name, Mesh mesh, Material material)
+        {
+            var host = new GameObject(name);
+            host.transform.SetParent(transform, worldPositionStays: false);
+            host.AddComponent<MeshFilter>().sharedMesh = mesh;
+
+            var renderer = host.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+
+            return renderer;
+        }
+
+        private void OnDestroy()
+        {
+            Retire(Skin);
+            Retire(Contours);
+            Discard(_ink);
+        }
+
+        private static void Retire(MeshRenderer renderer)
+        {
+            if (renderer == null)
             {
                 return;
             }
 
-            float rim = settings?.RimDrop ?? DressingSettings.Default.RimDrop;
+            MeshFilter filter = renderer.GetComponent<MeshFilter>();
 
-            for (int row = 0; row < map.Height; row++)
+            if (filter != null)
             {
-                for (int column = 0; column < map.Width; column++)
-                {
-                    int level = map.LevelAt(column, row);
-                    float floorHeight = Lowest(map, column, row, level, rim);
-                    float covered = (level * HexGeometry.LevelStep) - HexGeometry.TileBody;
-
-                    for (int index = 0; covered > floorHeight; index++)
-                    {
-                        var post = new GameObject(
-                            "Cliff " + column.ToString(CultureInfo.InvariantCulture)
-                            + "," + row.ToString(CultureInfo.InvariantCulture)
-                            + " -" + index.ToString(CultureInfo.InvariantCulture));
-
-                        post.transform.SetParent(transform, worldPositionStays: false);
-                        post.transform.localPosition =
-                            HexGeometry.ToWorld(column, row) + (Vector3.up * covered);
-
-                        post.AddComponent<MeshFilter>().sharedMesh = mesh;
-
-                        var renderer = post.AddComponent<MeshRenderer>();
-                        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-                        renderer.receiveShadows = true;
-                        renderer.sharedMaterial = surface;
-
-                        covered -= HexGeometry.TileBody;
-                    }
-                }
+                Discard(filter.sharedMesh);
             }
         }
 
-        /// <summary>
-        /// How far down the earth under a cell has to reach, in metres: the
-        /// face of its lowest neighbour, or <paramref name="rim"/> below the
-        /// cell where it is on the board's edge.
-        /// </summary>
-        /// <remarks>
-        /// Adjacency comes from the simulation's own neighbour walk rather than
-        /// from an offset table typed out here, for the reason
-        /// <see cref="RoadTiling.CorridorEdges"/> gives: a second opinion about
-        /// which cells touch is a bug that only shows on the odd rows.
-        /// </remarks>
-        private static float Lowest(HexMap map, int column, int row, int level, float rim)
+        private static void Discard(Object generated)
         {
-            Hex hex = Hex.FromOddRowOffset(column, row);
-            float here = level * HexGeometry.LevelStep;
-            float lowest = here;
-
-            for (int direction = 0; direction < Hex.DirectionCount; direction++)
+            if (generated == null)
             {
-                Hex neighbour = hex.Neighbour(direction);
-                Hex.ToOddRowOffset(neighbour, out int otherColumn, out int otherRow);
-
-                float face = otherColumn < 0 || otherColumn >= map.Width
-                    || otherRow < 0 || otherRow >= map.Height
-                    ? here - rim
-                    : map.LevelAt(otherColumn, otherRow) * HexGeometry.LevelStep;
-
-                if (face < lowest)
-                {
-                    lowest = face;
-                }
+                return;
             }
 
-            return lowest;
+            if (Application.isPlaying)
+            {
+                Destroy(generated);
+            }
+            else
+            {
+                DestroyImmediate(generated);
+            }
         }
 
         /// <summary>
-        /// Stands the board's scenery on the tiles. Nothing at all when no
+        /// Stands the board's scenery on the cells. Nothing at all when no
         /// models were wired, which is what a checkout without the art draws.
         /// </summary>
         private void Scatter(
@@ -511,7 +447,7 @@ namespace View
         }
 
         /// <summary>
-        /// Half a tile, in all three axes. The Y term is what stops a board
+        /// Half a cell, in all three axes. The Y term is what stops a board
         /// with tiers reporting a flat bounding box and being framed as though
         /// it had none.
         /// </summary>
@@ -522,7 +458,7 @@ namespace View
                 HexGeometry.PointToPoint * 0.5f);
 
         /// <summary>
-        /// A name that says where the tile is and what it is, so a human
+        /// A name that says where the piece is and what it is, so a human
         /// clicking around the hierarchy can check the floor against the map
         /// file without counting.
         /// </summary>

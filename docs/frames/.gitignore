@@ -132,6 +132,14 @@
 !roster/mage-hat-pitch-35-shipped.png
 !roster/mage-hat-pitch-55.png
 
+# And the three pictures of the bare board as it ships, from the match camera,
+# from a plan view, and the check that crops the corridor's steepest cell out of
+# each. The capture writes exactly these three names and nothing else, so the
+# negations are the whole of its output. board/README.md says what each one is.
+!board/board-match.png
+!board/board-plan.png
+!board/board-check.png
+
 # And the ten screen captures of the built player, which no capture tool writes
 # and nothing here regenerates: a whole ten-wave run on the wide roster, driven
 # by synthetic input. Named one at a time like every exception above, so the

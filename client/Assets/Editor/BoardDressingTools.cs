@@ -180,6 +180,13 @@ namespace View.Editor
             }
         }
 
+        public static void Rebake()
+        {
+            Clear();
+            DressWith(StreamingContent.ReadMap());
+            Bake();
+        }
+
         [MenuItem("Tools/Board/Bake")]
         public static void Bake()
         {
@@ -457,32 +464,8 @@ namespace View.Editor
         /// tools drew it with. A test that assumed the defaults would pass or
         /// fail on whether anybody had touched the asset.
         /// </remarks>
-        public static DressingSettings Settings()
-        {
-            foreach (string guid in AssetDatabase.FindAssets("t:BoardDressingAsset"))
-            {
-                var asset = AssetDatabase.LoadAssetAtPath<BoardDressingAsset>(
-                    AssetDatabase.GUIDToAssetPath(guid));
+        public static DressingSettings Settings() => MatchSceneBuilder.Dressing();
 
-                if (asset != null)
-                {
-                    return asset.Settings();
-                }
-            }
-
-            return DressingSettings.Default;
-        }
-
-        /// <summary>
-        /// The overrides as authored, read from <c>content/</c> rather than from
-        /// the streaming copy.
-        /// </summary>
-        /// <remarks>
-        /// The authored file is the one a bake writes and a human edits; the
-        /// streaming copy is generated from it. Previewing the copy would mean
-        /// the editor showed something a step behind whatever was just baked,
-        /// until somebody remembered to run the sync.
-        /// </remarks>
         private static BoardDressing Authored()
         {
             string path = Path.Combine(RepositoryRoot(), DressingPath);

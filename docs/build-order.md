@@ -335,13 +335,12 @@ generation and rotation are deferred behind the first hand-authored map.**
   function, a `simcli` mode to invoke it, the   sweep-scored archive, and the schedule that draws from it, all downstream of one map that is demonstrably
   good to score candidates against. What the survey found is in
   [open questions](research/design-surveys-digest.md).
-- **Smoothing** — a step between two cells is drawn today as the higher tile on a cliff post, and only the
-  corridor gets a ramp; where three heights meet the pieces disagree. Two candidates, rendered and not argued:
-  a skin over the grid, one mesh whose corners sit at the mean height of the cells meeting there; or a piece
-  for every neighbour case the slope limiter allows. Either is judged under the legibility veto from
-  [seam 8](#8--the-presentation): a slope that smooths the level out of sight has smoothed away the range that
-  comes with it, so a contour or a colour band per level is on the table beside both. Picking stays a rule
-  about cells and never reads the mesh.
+- **Smoothing** — shipped as the skin: one mesh over the grid, a flat top per cell and a planar slope between
+  levels, met to the road pieces at their own edges, with a contour line on every edge where the level changes.
+  Chosen over a piece per neighbour case under the legibility veto from [seam 8](#8--the-presentation), and
+  over a colour band per level because a tint per level is a colour taken from every unit and effect
+  ([ADR-0065](adr/0065-the-ground-is-one-skin-regenerated-from-the-map.md)). Picking stays a rule about
+  cells and never reads the mesh.
 
 **Nothing before step 5 needs it, and everything after step 5 is shaped by it.** Steps 1–4 run against the
 corridor that exists, so **the numbers they produce are provisional by construction** — stated where they are

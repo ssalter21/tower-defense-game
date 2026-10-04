@@ -27,22 +27,46 @@ where a date says a picture is older than the content. The reasoning is
 
 ./tools/capture-match-frames.ps1 -Ticks "1229,1546" -Distance 22 -Width 1600
 
+# THE FIXTURES BELOW ARE GONE. effects-roster.txt, four-lines.txt,
+# pierce-lines.txt, magic-lines.txt and creep-auras.txt were removed on
+# 13 September 2026, so the fifteen frames drawn from them are records of
+# the board as it stood and cannot be redrawn; the commands are kept as the
+# recipe each was drawn with. The four match-tick frames above are the ones
+# a run regenerates. The same holds for effect-candidates/ and
+# rung-candidates/, whose candidate files went in the same commit.
+
 # The same board, defense, wave and seed, played against a roster of your own
 ./tools/capture-match-frames.ps1 -Units "docs/frames/effects-roster.txt" `
     -Ticks "700" -Distance 20 -Width 1600
 
-# The same board, wave and seed, with a defense of your own standing on it
+# The same board, wave and seed, with a defense of your own standing on it.
+# One run per framing, with the whole tick list that framing keeps: a frame
+# is a function of its tick list as well as its tick (ADR-0064), so 0813 is
+# not captured with 0572 and 0780, which stand at the default distance.
 ./tools/capture-match-frames.ps1 -Defense "docs/frames/four-lines.txt" `
     -Ticks "572,780" -Width 1600
+./tools/capture-match-frames.ps1 -Defense "docs/frames/four-lines.txt" `
+    -Ticks "813" -Distance 22 -Width 1600
 
 ./tools/capture-match-frames.ps1 -Defense "docs/frames/pierce-lines.txt" `
     -Ticks "516,673" -Distance 18 -Width 1600
+./tools/capture-match-frames.ps1 -Defense "docs/frames/pierce-lines.txt" `
+    -Ticks "674" -Width 1600
 
 ./tools/capture-match-frames.ps1 -Defense "docs/frames/magic-lines.txt" `
     -Ticks "311,342,344" -Distance 22 -Width 1600
+./tools/capture-match-frames.ps1 -Defense "docs/frames/magic-lines.txt" `
+    -Ticks "331" -Width 1600
 
 # The same board, defense and seed, with a wave of your own walking it
 ./tools/capture-match-frames.ps1 -Wave "docs/frames/creep-auras.txt" `
+    -Ticks "272" -Distance 20 -Width 1600
+./tools/capture-match-frames.ps1 -Wave "docs/frames/creep-auras.txt" `
+    -Ticks "276" -Distance 14 -Width 1600
+./tools/capture-match-frames.ps1 -Wave "docs/frames/creep-auras.txt" `
+    -Ticks "271" -Width 1600
+./tools/capture-match-frames.ps1 -Wave "docs/frames/creep-auras.txt" `
+    -Ticks "94" -Distance 18 -Width 1600
 
 `-Units` replaces the roster (a fixture table kept in step with `content/units.txt`), `-Defense` what is
 standing, `-Wave` what is walking; which one a picture needs is decided by what the record is missing. Every
@@ -78,6 +102,7 @@ capstone went off on is found. Frames the capture writes that are not listed bel
 
 | Folder | What it holds |
 |---|---|
+| [`board/`](board/README.md) | The bare board as it ships — the skin, the contours and the road pieces — from the match camera and from a plan view, with the corridor's steepest cell cropped out of each so the level change is shown to be visible |
 | [`roster/`](roster/README.md) | Contact sheets drawn from set files: the nine tower lines on three sheets, the twelve creep bodies on two, and the four under-served rungs twice each — at `-Width 700` and at the twenty-four pixels a body gets at 1600x900 |
 | [`beside-props/`](beside-props/README.md) | The four props that stand on the tile beside a tower, and where each moves when a tower takes the tile |
 | [`effect-candidates/`](effect-candidates/README.md) | The alternatives to every effect look that ships on nobody's signature, each rendered at play framing and close; a candidate is a file, never an edit to `MatchTuning` |
