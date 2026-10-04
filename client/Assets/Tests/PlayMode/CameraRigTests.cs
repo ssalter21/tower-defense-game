@@ -413,8 +413,8 @@ namespace Tests.PlayMode
 
             Assert.That(
                 others.Length,
-                Is.GreaterThanOrEqualTo(root.Floor.TileCount + 2),
-                "The floor should be under here: every road piece, the skin and the contours.");
+                Is.GreaterThanOrEqualTo(root.Floor.TileCount + 1),
+                "The floor should be under here: every road piece and the skin.");
 
             Matrix4x4[] before = others.Select(t => t.localToWorldMatrix).ToArray();
 
@@ -461,27 +461,22 @@ namespace Tests.PlayMode
 
             float relief = (Levels(root.Map) * HexGeometry.LevelStep)
                 + DressingSettings.Default.RimDrop
-                + HexGeometry.TileBody
-                + HexSkin.ContourLift;
+                + HexGeometry.TileBody;
 
             foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(includeInactive: true))
             {
                 Assert.That(renderer, Is.TypeOf<MeshRenderer>(), renderer.name + " is not a mesh renderer");
 
-                bool contour = renderer == root.Floor.Contours;
-
                 Assert.That(
                     renderer.shadowCastingMode,
-                    Is.EqualTo(contour
-                        ? UnityEngine.Rendering.ShadowCastingMode.Off
-                        : UnityEngine.Rendering.ShadowCastingMode.On),
-                    renderer.name + (contour ? " casts a shadow" : " casts no shadow"));
+                    Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.On),
+                    renderer.name + " casts no shadow");
 
-                Assert.That(renderer.receiveShadows, Is.EqualTo(!contour), renderer.name + "'s shadow receiving is wrong");
+                Assert.That(renderer.receiveShadows, Is.True, renderer.name + " receives no shadow");
 
                 Mesh mesh = renderer.GetComponent<MeshFilter>().sharedMesh;
 
-                if (renderer == root.Floor.Skin || contour)
+                if (renderer == root.Floor.Skin)
                 {
                     Assert.That(mesh.bounds.size.y, Is.LessThanOrEqualTo(relief + 0.001f), renderer.name + " is taller than the board");
                 }

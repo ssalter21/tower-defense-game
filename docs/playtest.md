@@ -37,7 +37,7 @@ Four questions, asked once, answered in a sentence each.
 | 4 | Which round did you know you had lost or won, and what told you? | Whether the score's curve gives a run a shape, and where the tension is |
 | 5 | What would you build differently next run, in one sentence? | Whether the build space is a decision rather than a menu; the roster's depth |
 | 6 | Which tower or creep did you never consider, and why? | Which rows are invisible, mispriced or unreadable, for a harness to be pointed at |
-| 7 | Where on the board could you not tell which level a cell was on? | The smoothing candidate against the legibility veto |
+| 7 | Where on the board could you not tell which level a cell was on from its shade of green? | Whether the shades read, against the legibility veto |
 
 ## What is recorded, and where
 

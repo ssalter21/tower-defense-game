@@ -31,15 +31,6 @@ namespace View
     /// thing on the floor that carries no information about the match.
     /// </para>
     /// <para>
-    /// <b>Height is drawn, and it is not decoration.</b> A level is worth a
-    /// quarter of a hex of reach in the simulation, so a player who cannot see
-    /// which level a cell is on cannot read the range of a tower placed there.
-    /// The floor lifts each cell by <see cref="HexGeometry.LevelStep"/> per
-    /// level, lays a contour along every edge where the level changes, and
-    /// reports a bounding box that includes the climb, so the camera frames a
-    /// board with relief as a board with relief.
-    /// </para>
-    /// <para>
     /// <b>The map arrives parsed.</b> This class never opens a file and never
     /// reads a character grid: it is handed a <see cref="HexMap"/> that the
     /// simulation's own parser produced, corridor assertion and all. A view-side
@@ -57,7 +48,9 @@ namespace View
 
         private Transform _sky;
 
-        private Material _ink;
+        private Material[] _shades = System.Array.Empty<Material>();
+
+        private readonly Dictionary<TilePiece, Mesh> _seamless = new Dictionary<TilePiece, Mesh>();
 
         /// <summary>The map this floor was drawn from.</summary>
         public HexMap Map { get; private set; }
@@ -69,8 +62,6 @@ namespace View
         public int TileCount => _tiles.Count(tile => tile != null);
 
         public MeshRenderer Skin { get; private set; }
-
-        public MeshRenderer Contours { get; private set; }
 
         /// <summary>The material a corridor cell is drawn with.</summary>
         public Material RoadMaterial { get; private set; }
@@ -236,7 +227,7 @@ namespace View
                     cellObject.transform.SetParent(transform, worldPositionStays: false);
                     cellObject.transform.localPosition = centre + (Vector3.up * TileSet.FaceOffset);
                     cellObject.transform.localRotation = Quaternion.Euler(0f, -60f * choice.Rotation, 0f);
-                    cellObject.AddComponent<MeshFilter>().sharedMesh = tiles.MeshFor(choice.Piece);
+                    cellObject.AddComponent<MeshFilter>().sharedMesh = SeamlessMeshFor(tiles, choice.Piece);
 
                     var renderer = cellObject.AddComponent<MeshRenderer>();
                     renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
@@ -250,38 +241,78 @@ namespace View
             WorldBounds = new Bounds((min + max) * 0.5f, max - min);
         }
 
+        private Mesh SeamlessMeshFor(TileSet tiles, TilePiece piece)
+        {
+            if (!_seamless.TryGetValue(piece, out Mesh mesh))
+            {
+                Mesh art = tiles.MeshFor(piece);
+                mesh = art != null ? SeamlessPiece.Of(art) : null;
+                _seamless[piece] = mesh;
+            }
+
+            return mesh;
+        }
+
         private void Smooth(HexMap map, TileSet tiles, DressingSettings settings)
         {
             float rim = settings?.RimDrop ?? DressingSettings.Default.RimDrop;
             var skin = new HexSkin(map, _tiles, rim);
 
-            Skin = Host("Skin", skin.Ground(HexSkin.Swatches.SampledFrom(tiles.MeshFor(TilePiece.Ground))), GrassMaterial);
+            var host = new GameObject("Skin");
+            host.transform.SetParent(transform, worldPositionStays: false);
+            host.AddComponent<MeshFilter>().sharedMesh =
+                skin.Ground(HexSkin.Swatches.SampledFrom(tiles.MeshFor(TilePiece.Ground)));
+
+            Skin = host.AddComponent<MeshRenderer>();
+            Skin.sharedMaterials = SkinMaterials(map);
             Skin.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             Skin.receiveShadows = true;
-
-            _ink = ViewMaterials.Matte("Contour", SceneFraming.ContourColor);
-            Contours = Host("Contours", skin.Contours(), _ink);
-            Contours.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            Contours.receiveShadows = false;
         }
 
-        private MeshRenderer Host(string name, Mesh mesh, Material material)
+        private Material[] SkinMaterials(HexMap map)
         {
-            var host = new GameObject(name);
-            host.transform.SetParent(transform, worldPositionStays: false);
-            host.AddComponent<MeshFilter>().sharedMesh = mesh;
+            (int lowest, int highest) = LevelsInUse(map);
+            Material[] materials = Enumerable.Repeat(GrassMaterial, HexSkin.SubmeshCount).ToArray();
+            var shades = new List<Material>();
 
-            var renderer = host.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
+            for (int level = lowest; level <= highest; level++)
+            {
+                Material shade = ViewMaterials.Shaded(
+                    GrassMaterial,
+                    SceneFraming.GroundShade(level, lowest, highest),
+                    "Ground at level " + level.ToString(CultureInfo.InvariantCulture));
 
-            return renderer;
+                materials[HexSkin.ShadeSubmesh(level)] = shade;
+                shades.Add(shade);
+            }
+
+            _shades = shades.ToArray();
+
+            return materials;
+        }
+
+        private static (int Lowest, int Highest) LevelsInUse(HexMap map)
+        {
+            int[] levels = Enumerable.Range(0, map.Height)
+                .SelectMany(row => Enumerable.Range(0, map.Width).Select(column => map.LevelAt(column, row)))
+                .ToArray();
+
+            return (levels.Min(), levels.Max());
         }
 
         private void OnDestroy()
         {
             Retire(Skin);
-            Retire(Contours);
-            Discard(_ink);
+
+            foreach (Material shade in _shades)
+            {
+                Discard(shade);
+            }
+
+            foreach (Mesh piece in _seamless.Values)
+            {
+                Discard(piece);
+            }
         }
 
         private static void Retire(MeshRenderer renderer)

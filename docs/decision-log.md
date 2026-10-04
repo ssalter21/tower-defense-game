@@ -11,6 +11,7 @@ The entries are one file per month, so that a link to one lands on one month and
 |---|---|
 | [`decision-log/2026-08.md`](decision-log/2026-08.md) | 27 — the finished skeleton, the six reversals, the roster signed, the gates in and out, the fold, the collection imported |
 | [`decision-log/2026-09.md`](decision-log/2026-09.md) | 33 — the vision cut to its decisions, the roster widened and signed, the transformation, the raise, the bounty, the token, the shapes, the rebaseline, the harness removed, the board smoothed |
+| [`decision-log/2026-10.md`](decision-log/2026-10.md) | 1 — the contour off, the shades of green on |
 
 **What is *not* here:** where the vision replaces a claim in one of the five archived deep dives. That is
 [the archive index](archive/README.md#what-the-vision-overturns).
@@ -91,3 +92,7 @@ The entries are one file per month, so that a link to one lands on one month and
 - [13 September 2026, after the map — the vision is rebaselined on a playtest of six friends, and five claims reverse](decision-log/2026-09.md#13-september-2026-after-the-map--the-vision-is-rebaselined-on-a-playtest-of-six-friends-and-five-claims-reverse)
 - [28 September 2026 — the balance harness comes out until it is specified](decision-log/2026-09.md#28-september-2026--the-balance-harness-comes-out-until-it-is-specified)
 - [28 September 2026 — the board is smoothed by a skin, and a level reads by a contour](decision-log/2026-09.md#28-september-2026--the-board-is-smoothed-by-a-skin-and-a-level-reads-by-a-contour)
+
+### October 2026
+
+- [3 October 2026 — the contour comes off, and a level reads by a subtle shade of green](decision-log/2026-10.md#3-october-2026--the-contour-comes-off-and-a-level-reads-by-a-subtle-shade-of-green)

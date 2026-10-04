@@ -102,7 +102,7 @@ capstone went off on is found. Frames the capture writes that are not listed bel
 
 | Folder | What it holds |
 |---|---|
-| [`board/`](board/README.md) | The bare board as it ships — the skin, the contours and the road pieces — from the match camera and from a plan view, with the corridor's steepest cell cropped out of each so the level change is shown to be visible |
+| [`board/`](board/README.md) | The bare board as it ships — the skin in its shades of green and the road pieces — from the match camera and from a plan view, with the corridor's steepest cell cropped out of each so the level change is shown to be visible |
 | [`roster/`](roster/README.md) | Contact sheets drawn from set files: the nine tower lines on three sheets, the twelve creep bodies on two, and the four under-served rungs twice each — at `-Width 700` and at the twenty-four pixels a body gets at 1600x900 |
 | [`beside-props/`](beside-props/README.md) | The four props that stand on the tile beside a tower, and where each moves when a tower takes the tile |
 | [`effect-candidates/`](effect-candidates/README.md) | The alternatives to every effect look that ships on nobody's signature, each rendered at play framing and close; a candidate is a file, never an edit to `MatchTuning` |

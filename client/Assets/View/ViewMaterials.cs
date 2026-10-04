@@ -119,6 +119,22 @@ namespace View
             return material;
         }
 
+        public static Material Shaded(Material source, float shade, string name)
+        {
+            var material = new Material(source) { name = name };
+
+            foreach (string property in ColorProperties)
+            {
+                if (material.HasProperty(property))
+                {
+                    Color colour = material.GetColor(property);
+                    material.SetColor(property, new Color(colour.r * shade, colour.g * shade, colour.b * shade, colour.a));
+                }
+            }
+
+            return material;
+        }
+
         /// <summary>
         /// Builds one plain lit material that the floor and the bodies behind
         /// it show through.
