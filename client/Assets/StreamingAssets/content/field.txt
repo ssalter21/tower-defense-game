@@ -1,12 +1,12 @@
-# The wave the sweep's canned field sends.
+# The wave the canned field sends.
 #
 # THIS IS THE GHOST POOL'S STAND-IN AND NOT A MATCH'S WAVE. A round is resolved
 # against a field of K opponents drawn from a population of other players'
 # rounds, and no such population exists until runs are stored. Until then the
 # population is the one player written here -- this wave, standing behind the
 # committed defense -- recorded once per round and drawn with replacement, so a
-# field of ten is that opponent's round ten times. That makes the harness part
-# of the economy rather than a tool pointed at it: what a run's wave is paid for
+# field of ten is that opponent's round ten times. That makes this file part
+# of the economy rather than a fixture beside it: what a run's wave is paid for
 # getting past is whatever is in here.
 #
 # AND THIS IS THE OPENING ROUND, NOT THE WHOLE RUN. The stand-in buys this
@@ -40,8 +40,8 @@
 # base a round, and that same purse pays for the wall, so what it sends is a
 # little over a hundred gold a round. A field member that outspends every
 # opponent it faces by three and a half times is not a strong opponent, it is a
-# different game, and a sweep against one reports a total loss on every row and
-# names nothing.
+# different game, and every run against one reports a total loss and names
+# nothing.
 #
 # SO THIS IS A BUILD PHASE'S OUTPUT: one column opening on tick zero, and a
 # hundred gold of it, because that is about what a round's wave comes to once
@@ -67,10 +67,10 @@
 # not a slightly different opponent, it is a walkover.
 #
 # WHICH IS ALSO WHY THIS ONE IS CALIBRATED AND NOT AVERAGED. It is the shape
-# that makes the report an instrument, and the instrument is now the offense
-# half of it alone: every row of content/sweep.csv loses every run against an
-# opponent who accumulates, so the win-rate column reads zero on all five and
-# what separates the creeps is what they got past this opponent's WALL --
+# that made the balance report an instrument, and the instrument was the
+# offense half of it alone: every row of that report lost every run against an
+# opponent who accumulates, so the win-rate column read zero on all five and
+# what separated the creeps was what they got past this opponent's WALL --
 # dealt, bonus and cost efficiency. Against the two-column wave every creep got
 # past everything, and against wave.txt none of them got past anything; neither
 # of those reports says anything about a creep either.
@@ -78,7 +78,7 @@
 # IT DECIDES THE PERFORMANCE BONUS AS WELL AS THE WIN RATE, and the same
 # calibration argument carries -- more directly than it used to. The bonus is a
 # share of the leak cost a run's wave dealt, so this opponent's WALL is what
-# decides it: swept at the committed shape the roster's five earn between 9,189
+# decides it: swept at the committed shape of the day, the roster's five earned between 9,189
 # and 13,152 gold of bonus against 13,440 of flat base, and the column separates
 # them creep by creep. Against wave.txt, which outspends every opponent it faces
 # three and a half times over, a run gets nothing past and the bonus is zero on

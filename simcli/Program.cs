@@ -38,8 +38,8 @@ public static class Program
     /// The longest run a command file can describe. A build phase stores its
     /// wave as a <c>u16</c>, so a run past this has rounds no decision can be
     /// stored for. The floor is one rather than zero: a run whose wave cap is
-    /// lifted is bounded by its health alone, which is a sweep's loop rather
-    /// than a run somebody plays from a file.
+    /// lifted is bounded by its health alone, which is a loop rather than a
+    /// run somebody plays from a file.
     /// </summary>
     private const int MaximumWaves = 65535;
 
@@ -50,18 +50,14 @@ public static class Program
     /// </summary>
     private const int MaximumFieldSize = 65535;
 
-    /// <summary>
-    /// The most seeds one creep may be played on. There is no rule putting a
-    /// ceiling here; a bound there is stops a mistyped argument asking for a
-    /// billion runs and getting them.
-    /// </summary>
-    private const int MaximumRunsPerCreep = 100000;
-
-    /// <summary>The most rows of a roster a sweep may be bounded to. The unit table is a u16 id space.</summary>
+    /// <summary>The largest type id a creep may be asked for by. The unit table is a u16 id space.</summary>
     private const int MaximumCreeps = 65535;
 
     /// <summary>What <see cref="AllInBot"/> is called on the command line.</summary>
     private const string AllIn = "all-in";
+
+    /// <summary>What <see cref="EvenShareBot"/> is called on the command line.</summary>
+    private const string EvenShare = "even-share";
 
     /// <summary>
     /// The directory a run's content is taken out of where a file is not named
@@ -194,8 +190,11 @@ public static class Program
         "         from the folder it is filling, so a pool seeded a run at a",
         "         time grows into a population that has met itself.",
         string.Empty,
-        "         --policy names the player, as sweep's does. --creep is the",
-        "         type id it sends; left out, it is the roster's first walker.",
+        "         --policy names the scripted player: " + EvenShare + ", which",
+        "         spends half of every purse on the board and half on the wave,",
+        "         or " + AllIn + ", which builds nothing and sends the lot. --creep",
+        "         is the type id it sends; left out, it is the roster's first",
+        "         walker.",
         string.Empty,
         "  ladder     --units <file> --upgrades <file>",
         string.Empty,
@@ -218,46 +217,12 @@ public static class Program
         "         The picture is of the PARSED map, so a file that will not load",
         "         produces the refusal and no picture at all.",
         string.Empty,
-        "  sweep      --seed <number> [--runs <number>] [--out <file>]",
-        "             " + RunContentUsage,
-        "             " + RunShapeUsage,
-        "             [--free-snapshots <number>] [--snapshot-price <number>]",
-        "             [--most-creeps <number>] [--policy <name>] [--per-run]",
-        "             [--walls <types>]",
+        "  The shape of a run",
         string.Empty,
-        "         Plays a population of runs per creep and writes the balance",
-        "         report as a comma-separated file -- to --out, or to standard",
-        "         output where there is no --out. --runs is how many seeds each",
-        "         creep is played on and --most-creeps bounds the roster; both",
-        "         bounds are reported in the file's own coverage rows.",
-        string.Empty,
-        "         --policy names the scripted player: " + SweepPlan.EvenShare + ", which",
-        "         spends half of every purse on the board and half on the wave,",
-        "         or " + AllIn + ", which builds nothing and sends the lot. Two reports",
-        "         under the two of them are what says what the defensive half of",
-        "         a round is worth. The name is a row of the file.",
-        string.Empty,
-        "         --walls is what the OPPONENTS' towers are made of, and every",
-        "         creep is scored against every one of them: a comma-separated",
-        "         list of " + string.Join(", ", DamageMatrix.AttackWordList) + ", or '" + AnyWall + "' for",
-        "         whatever the defending bot buys unrestricted. Left out, it is",
-        "         every attack type the roster has a tower for. One wall cannot",
-        "         price a roster -- the matrix is authored so none of the three",
-        "         is globally better, so a single wall reports a landslide and a",
-        "         zero and which creep gets which is a fact about the bot.",
-        string.Empty,
-        "         --per-run writes a row for every run under the folded ones,",
-        "         each naming the seed it was played on -- the distribution the",
-        "         fold is a summary of. It is off by default because the row",
-        "         count is the roster times the sample.",
-        string.Empty,
-        "         The four dials retune the ruleset for the sweep alone. Left",
-        "         out, each is whatever --rules already says.",
-        string.Empty,
-        "         --waves and --field-size are N and K: how many waves the run",
-        "         lasts and how many opponents each round is resolved against.",
-        "         --no-death keeps a run going after its health reaches zero, so",
-        "         that a sweep gets N rounds of data out of every row.",
+        ProseIndent + "--waves and --field-size are N and K: how many waves the run",
+        ProseIndent + "lasts and how many opponents each round is resolved against.",
+        ProseIndent + "--no-death keeps a run going after its health reaches zero, so",
+        ProseIndent + "that a scripted run yields N rounds rather than a short one.",
         string.Empty,
         "  Where a run's content comes from",
         string.Empty,
@@ -288,7 +253,7 @@ public static class Program
         "  The two files that hold orders, and why they are two",
         string.Empty,
         "         --field is the canned opponent, and every verb that plays a run",
-        "         takes it: play-run, record-run and sweep. It is one",
+        "         takes it: play-run, record-run and store-run. It is one",
         "         round's worth of orders standing behind --defense, drawn with",
         "         replacement to make the field of K a round is resolved against.",
         "         A build phase composes what is sent rather than when, so every",
@@ -348,7 +313,7 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            throw new UsageException("No verb. This program does one of nine things.");
+            throw new UsageException("No verb. This program does one of eight things.");
         }
 
         switch (args[0])
@@ -396,20 +361,6 @@ public static class Program
             // picture depends on.
             case "draw-map":
                 return DrawMap(Arguments.Parse("draw-map", args, 1, new[] { "map", "out" }));
-
-            case "sweep":
-                return RunSweep(RunVerb(
-                    "sweep",
-                    args,
-                    "seed",
-                    "runs",
-                    "out",
-                    "free-snapshots",
-                    "snapshot-price",
-                    "most-creeps",
-                    "policy",
-                    "per-run",
-                    "walls"));
 
             default:
                 throw new UsageException($"'{args[0]}' is not a verb this program has.");
@@ -565,7 +516,7 @@ public static class Program
                 + "that would play a whole run and write nothing.");
         }
 
-        string name = arguments.Optional("policy") ?? SweepPlan.EvenShare;
+        string name = arguments.Optional("policy") ?? EvenShare;
         BuildPolicy policy = PolicyOf(name);
 
         Run run = content.Fresh(arguments.RequiredUnsigned("seed"), ShapeOf(arguments));
@@ -596,9 +547,9 @@ public static class Program
     /// </summary>
     /// <remarks>
     /// A default rather than a refusal, because a scripted player has to be
-    /// sending something and the first row of the table is the one a sweep's
-    /// first row is about. Naming <c>--creep</c> is how a folder gets seeded
-    /// with runs that send different things.
+    /// sending something and the first walker in the table is the plainest
+    /// thing to send. Naming <c>--creep</c> is how a folder gets seeded with
+    /// runs that send different things.
     /// </remarks>
     private static int FirstCreep(UnitTypeTable types)
     {
@@ -752,139 +703,6 @@ public static class Program
     }
 
     /// <summary>
-    /// Plays a population of runs per creep and writes the balance report.
-    /// </summary>
-    /// <remarks>
-    /// <b>The harness computes and this writes.</b> Every number below comes off
-    /// <see cref="SweepReport"/>; the only decisions made here are which file the
-    /// text lands in and what an absent dial means, which is "whatever the
-    /// ruleset already says".
-    /// </remarks>
-    private static int RunSweep(Arguments arguments)
-    {
-        string name = arguments.Optional("policy") ?? SweepPlan.EvenShare;
-        RunContent content = ContentOf(arguments);
-
-        SweepPlan plan = content.Sweep(
-            ShapeOf(arguments),
-            WallsOf(arguments, content),
-            arguments.RequiredUnsigned("seed"),
-            arguments.Optional("runs", SweepPlan.DefaultRunsPerCreep, 1, MaximumRunsPerCreep),
-            Dial(arguments, "free-snapshots"),
-            Dial(arguments, "snapshot-price"),
-            arguments.Optional("most-creeps", SweepPlan.WholeRoster, SweepPlan.WholeRoster, MaximumCreeps),
-            PolicyOf(name),
-            arguments.Given("per-run"),
-            name);
-
-        SweepReport report = Sim.Sweep.Of(plan);
-        string csv = SweepCsv.Of(report);
-        string? path = arguments.Optional("out");
-
-        if (path is null)
-        {
-            Console.Out.Write(csv);
-
-            return 0;
-        }
-
-        Write(path, csv);
-        Console.Out.Write("swept      " + report.ToString() + "\n");
-
-        for (int index = 0; index < report.Coverage.Count; index++)
-        {
-            Console.Out.Write("coverage   " + report.Coverage[index].ToString() + "\n");
-        }
-
-        return 0;
-    }
-
-    /// <summary>What a wall of no restriction is asked for by name.</summary>
-    private const string AnyWall = SweepWall.Any;
-
-    /// <summary>How the walls are separated in one argument.</summary>
-    private const char WallSeparator = ',';
-
-    /// <summary>
-    /// The walls to score the roster against: the roster's own attack types
-    /// where nobody said, or the ones named.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>Every attack type is the default because one of them is not a
-    /// report.</b> The matrix is authored so no attack type is globally better,
-    /// so a wall of one type hard-counters one armour class and barely troubles
-    /// another: swept against a single wall the roster reads as a landslide and
-    /// a zero, and which creep gets which says more about the defending bot than
-    /// about any creep. Measured in
-    /// <c>docs/research/a-sweep-row-measures-the-walls-attack-type.md</c>.
-    /// </para>
-    /// <para>
-    /// <b><c>any</c> is the way back to one wall</b>, and it is a name rather
-    /// than an absence: a report played against whatever a value-buying bot
-    /// converged on is a legitimate thing to ask for -- it is what a run
-    /// actually meets -- but it is not the thing this file is committed as, and
-    /// the two must not be confusable. It cannot be mixed with a restricted
-    /// wall, because "no restriction" is not a fourth type and a file listing
-    /// it beside pierce would read as though it were.
-    /// </para>
-    /// </remarks>
-    private static IReadOnlyList<AttackType> WallsOf(Arguments arguments, RunContent content)
-    {
-        string? named = arguments.Optional("walls");
-
-        if (named is null)
-        {
-            return content.WallTypes();
-        }
-
-        string[] words = named.Split(WallSeparator);
-        var walls = new List<AttackType>();
-
-        for (int index = 0; index < words.Length; index++)
-        {
-            string word = words[index].Trim();
-
-            if (word == AnyWall)
-            {
-                if (words.Length > 1)
-                {
-                    throw new UsageException(
-                        $"--walls names '{AnyWall}' beside {words.Length - 1} attack "
-                        + $"{(words.Length == 2 ? "type" : "types")}. '{AnyWall}' is the absence of a "
-                        + "restriction rather than a fourth kind of wall, so a report carrying it beside "
-                        + "pierce would have two rows a reader would compare and one of them would be the "
-                        + "other one's superset. Ask for it alone, or name the types.");
-                }
-
-                return new AttackType[0];
-            }
-
-            AttackType attack = DamageMatrix.AttackFor(word);
-
-            if (attack == AttackType.None)
-            {
-                throw new UsageException(
-                    $"--walls names '{word}', which is not an attack type. A wall is built out of one of "
-                    + $"{string.Join(", ", DamageMatrix.AttackWordList)}, or '{AnyWall}' for whatever the "
-                    + "defending bot buys unrestricted.");
-            }
-
-            if (walls.Contains(attack))
-            {
-                throw new UsageException(
-                    $"--walls names '{word}' twice. Every creep meets every wall once, so a repeated wall "
-                    + "is the same fifteen runs played and reported again under a heading that cannot be "
-                    + "told from the first.");
-            }
-
-            walls.Add(attack);
-        }
-
-        return walls;
-    }
-
-    /// <summary>
     /// The scripted player a name asks for, or a refusal naming the ones this
     /// program has.
     /// </summary>
@@ -897,20 +715,13 @@ public static class Program
     private static BuildPolicy PolicyOf(string name) =>
         name switch
         {
-            SweepPlan.EvenShare => EvenShareBot.Decide,
+            EvenShare => EvenShareBot.Decide,
             AllIn => AllInBot.Decide,
             _ => throw new UsageException(
-                $"'{name}' is not a player this program has. It sweeps under "
-                + $"{SweepPlan.EvenShare}, which spends half of every purse on the board and half on the "
+                $"'{name}' is not a player this program has. It plays under "
+                + $"{EvenShare}, which spends half of every purse on the board and half on the "
                 + $"wave, or {AllIn}, which builds nothing and sends the lot."),
         };
-
-    /// <summary>
-    /// One of the ruleset's retunable numbers, or the value that says the
-    /// ruleset's own answer stands.
-    /// </summary>
-    private static int Dial(Arguments arguments, string name) =>
-        arguments.Optional(name, SweepPlan.AsAuthored, 0, int.MaxValue);
 
     /// <summary>
     /// N, K and the death flag, read the same way for every verb that plays a

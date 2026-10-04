@@ -2,18 +2,22 @@
 
 **Status: the questions, unanswered.** A blank here is not an omission, it is the ask, as on
 [the roster](../roster.md#how-to-edit-this). This document is filled in from a sitting with Sam, in the order
-the sections run, and it is reviewed as a document before a column of the harness moves. The ruling that made
-it, on 13 September 2026: the harness does not do what it is needed for, and it wants a whole spec.
+the sections run, and it is reviewed as a document before the harness is built again. The ruling that made
+it, on 13 September 2026: the harness does not do what it is needed for, and it wants a whole spec. The
+ruling that followed, on 28 September 2026: until it is defined it costs more than it returns, so the first build
+is removed and the next one starts here -- [the decision log](../decision-log/2026-09.md#28-september-2026--the-balance-harness-comes-out-until-it-is-specified) has the entry.
 
-## What the harness is today
+## What the harness was
 
-A `simcli` mode and a comma-separated file, verified against a committed report. It plays every creep against
-a wall of every attack type the roster has a tower for, over a population of seeds, under a scripted player,
-and folds the result to a row per creep and wall, with a row per run on request. It takes every content file
-and every shape parameter as an argument. The rules of its shape are
-[ADR-0041](../adr/0041-the-sweep-computes-rows-and-the-shell-writes-them.md) and
-[ADR-0058](../adr/0058-a-sweep-row-is-a-creep-against-one-attack-type.md); the columns are declared once in
-`simcli/SweepColumns.cs`; the shell end is `tools/run-sweep.ps1`.
+A `simcli` mode and a comma-separated file, verified against a committed report. It played every creep against
+a wall of every attack type the roster had a tower for, over a population of seeds, under a scripted player,
+and folded the result to a row per creep and wall, with a row per run on request. It took every content file
+and every shape parameter as an argument. It was removed on 28 September 2026; the rules of its shape are kept as
+records in [ADR-0041](../adr/0041-the-sweep-computes-rows-and-the-shell-writes-them.md) and
+[ADR-0058](../adr/0058-a-sweep-row-is-a-creep-against-one-attack-type.md), and what it measured is in
+[the research notes](../research/). Nothing of the first build constrains the next one; what does survive
+is the two scripted players, the canned field and the stored-round pool, which the game uses on its own
+account.
 
 ## What it cannot see, with the day each blindness was accepted
 

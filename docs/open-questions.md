@@ -20,7 +20,7 @@ silhouette, and the moving-squad branch was priced and closed.
 
 What survives is **projectile volume**. The ghost record costs nothing — a record stores inputs, and
 projectiles are output — but every projectile resolves its target by a linear scan of the creep array every
-tick it is in flight, so the term is **O(projectiles × creeps)** and the harness multiplies it by every match
+tick it is in flight, so the term is **O(projectiles × creeps)** and a harness multiplies it by every match
 it sweeps. **Modelling each archer as its own shooter buys nothing**: N archers on one cell share a coverage
 interval, are handed the same target and never drift apart, so a squad is behaviourally identical to one
 shooter firing N arrows *unless the bodies can die independently*. Attrition is the only thing that justifies
@@ -36,8 +36,8 @@ the model for the whole defense.** [Seam 1](build-order.md#1--the-match-format)'
 gold — charging gold on top would make it a permit rather than a price, a different mechanic with a different
 failure mode — the currency is called a capstone, and it banks. What is open is the schedule itself: the
 opening pair of two slots and ten count, and the 2/4/6/8 and 10/20/30/40 steps. It waits on the people
-playtest — the playtestable build, alongside the balance sweep — and not on a run played on a branch, which
-would be thrown out with them.
+playtest — the playtestable build — and not on a run played on a branch, which would be thrown out with
+it.
 
 **Whether the wave is always on screen, or behind a control.** Reopened by the wheel. The
 [chosen build-phase arrangement](build-order.md#7--the-interface) keeps what you are sending permanently
@@ -73,8 +73,8 @@ five, too few to draw from, so this waits on the round-robin's pool.
 your own build**, aggregated over the simulated games. It needs per-cell kill attribution and a board to draw
 on, so it is [seam 7](build-order.md#7--the-interface) and [seam 8](build-order.md#8--the-presentation) work,
 and it is explicitly a thing to feel out in play. Until it exists, the round-robin's gold sink beyond ten
-snapshots is the only paid information in the game. **The free-snapshot count and the price beyond it are sweep
-parameters**, and the snapshot price is the first non-unit line in the cost column.
+snapshots is the only paid information in the game. **The free-snapshot count and the price beyond it are the
+two numbers `Ruleset.With` retunes**, and the snapshot price is the first non-unit line in the cost column.
 
 **Which towers carry which attack type, which creeps which armour type, and the `bonusVsTag` magnitude per
 anchor.** Content, and [seam 3](build-order.md#3--the-roster)'s. 4.00× is a measured example, not a tuned
@@ -185,8 +185,8 @@ models a player valuing a board or a player emptying a purse; the specification 
 
 ### Is a sweep row worth reading when the wall stops its creep outright?
 
-*Owned by [the sweep specification](specs/sweep-harness.md).* The skeleton scout deals **0** over eight runs in
-`content/sweep.csv`: a real reading of the board, and a row that ranks against nothing and cannot disagree
+*Owned by [the sweep specification](specs/sweep-harness.md).* The skeleton scout dealt **0** over eight runs in
+the last committed report: a real reading of the board, and a row that ranks against nothing and cannot disagree
 with itself across seeds. Leave the zero as the finding, play against a thinner wall, or add a column for how
 far a row *survived* — the third is the only shape that does not choose between honesty and signal. The
 specification decides.
@@ -239,8 +239,8 @@ swing on which the shot leaves the hand.
 - **Whether the positions combine into one placing at the end of the run.** Opus Magnum never combines. A
   single placing makes a winner, which a room of friends will want; it also lets the offense decide the
   winner, which the old placing forbade.
-- **Whether health taken stays the field average or becomes the sum of the waves.** Average keeps every number
-  the sweep produced comparable. Sum makes a lobby of six twice as lethal as a lobby of three.
+- **Whether health taken stays the field average or becomes the sum of the waves.** Average is what every
+  number measured so far was measured under. Sum makes a lobby of six twice as lethal as a lobby of three.
 - **Whether a player sees the other boards before committing.** §3 calls this scouting in the lobby: the
   opponent's defense as of the end of the previous round, stale, never live. The folder makes it free; whether
   it is shown is a design choice.
