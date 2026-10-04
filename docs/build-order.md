@@ -18,7 +18,7 @@ finding stands and the sequence does not follow from it — see
 | 1 | **Cost column, one purse, wave slots, income between waves, and the damage model** | Every integer in `content/units.txt` becomes a design lever. The ×10 scale and the attack/armour columns land here too — cheap now, a content migration and a retired ghost pool after step 6. [§3](vision.md#how-a-shot-resolves) | Small |
 | 2 | **A run is N waves with a build phase between, recorded as a command stream** | `Match` gains a lifecycle; the record gains `(wave index, decision)` pairs, which is what a build phase *is* to a record; `simcli` gains a mode that plays a command file | Medium — the real structural work |
 | 3 | **Roster to about ten units, using only the levers `UnitType` already has** | Enough vocabulary for a decision to be interesting | Small — it is text rows |
-| 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small |
+| 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** — built, then removed on 28 September 2026 until [its specification](specs/sweep-harness.md) is written | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small |
 | 5 | **Build-phase interaction in the client: click a hex, place, compose the next wave, commit** | The first thing that is *playable* rather than readable | Medium |
 | 6 | **Opponents read from a folder of stored rounds** | The whole loop at zero latency, with no service in it. A stored round is a wall and a wave at a stage, and a run draws K of them recorded at its own — [ADR-0057](adr/0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md) | Small — the defense and the wave already round-trip |
 | 7 | **The people playtest: a lobby of about six friends, and the six MVPs it needs** — the wrapper and the lobby folder, the per-metric score, the hex wheel, the animation score on two tower lines, one board-smoothing candidate, and the sweep specification. [The proposal](archive/playtest-rebaseline-proposal.md) scopes each and orders them | Medium each; they run in parallel once the first two are on a branch |
@@ -94,7 +94,7 @@ Each is the subject of its own wayfinder map — its own destination, decision t
 | 1 | **The match format** | A decided-in-full ruleset for a single match, including the shape of its depth | Steps 1–3 are its first half, taken as experiments |
 | 2 | **The submission barrier** | One mode architecture proven to serve all three latencies | Its lobby half is step 7's first piece; the rest after |
 | 3 | **The roster** | What towers and attacking units exist, and what they vary by | Step 3 flat; deepened after step 5, revisited at step 7 |
-| 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | Step 4 built it; step 7 owes it [a specification](specs/sweep-harness.md) before it is rebuilt |
+| 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | Step 4 built it and 28 September 2026 removed it; step 7 owes it [a specification](specs/sweep-harness.md), and the next build starts from that |
 | 5 | **The service** | Accounts, pool, submission, standings, replays, re-simulation | After step 6 |
 | 6 | **The social layer** | What makes an absent opponent feel like a person | After seam 5 |
 | 7 | **The interface** | Reading twenty boards, an economy and a build menu at once | Step 5 is its single-board half; step 7 replaces the menu with the hex wheel |
@@ -193,8 +193,16 @@ The tool and the definitions underneath it: what a sweep is, what it measures, w
 is paid for once, against every round of the run that is left — and how a verdict gets back into `content/`
 without invalidating a pool of stored ghosts.
 
+**The first build is gone.** Step 4 built a `simcli` mode and a CSV, verified against a committed report, and
+on 28 September 2026 it was removed: it did not do what it is needed for, what it is needed for is not written
+down, and every content change was paying to regenerate a report nobody read. What it measured is in
+[the research notes](research/) and its shape in
+[ADR-0041](adr/0041-the-sweep-computes-rows-and-the-shell-writes-them.md) and
+[ADR-0058](adr/0058-a-sweep-row-is-a-creep-against-one-attack-type.md), both kept as records; the ruling is
+in [the decision log](decision-log/2026-09.md#28-september-2026--the-balance-harness-comes-out-until-it-is-specified).
+
 **The bonus is a share of what a wave dealt**, and a round is resolved against K opponents drawn from the
-sweep's canned set, so the harness is what a run's damage is dealt *to*; nothing about the payment waits on
+canned field, so the stand-in is what a run's damage is dealt *to*; nothing about the payment waits on
 step 6.
 
 **It waits for no other seam.** At 2.75 ms a match it is a `simcli` mode and a CSV. If the generative direction
@@ -203,12 +211,11 @@ is caught by win rate **binned by number of ingredients taken**, a grouping rath
 
 **Pointed at maps it scores them**, which is what makes
 [generated rotation](vision.md#the-board-is-a-maze) a filter rather than a hope. **The sweep
-must take its map as a parameter, not as a fixed input.** One further column is owed: the both-columns check.
-Outcome spread and the ingredient bin are queries, not columns — `--per-run` writes a row per run, so both
-are read off a file the sweep already produced rather than an edit to the harness.
+must take its map as a parameter, not as a fixed input.** Outcome spread and the ingredient bin are queries,
+not columns: a row per run is what makes both readable off one file.
 
-**It is owed a specification before another column.** The harness does not do what it is needed for, and
-what it is needed for is not written down; what is written down is every thing it cannot see.
+**It is owed a specification before it is built again.** What was written down about the first build was
+every thing it could not see; what it is needed for was not.
 [`docs/specs/sweep-harness.md`](specs/sweep-harness.md) holds the five questions the specification has to
 answer, in the order they decide each other, and it is written from a sitting rather than from a ticket.
 

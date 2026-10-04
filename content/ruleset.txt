@@ -3,8 +3,7 @@
 # EVERY NUMBER THE RULES ARE MADE OF, and not one of them in code. The damage
 # matrix, the armour expression, the floor, the purse, the health pool and the
 # scouting price all live here, so tuning any of them is an edit to this file
-# and never a compile -- and a sweep can sweep them the way it already sweeps a
-# map.
+# and never a compile.
 #
 # Same rules as units.txt: integers only, no decimal point, comments free. The
 # content hash folds the parsed integers in FIELD ORDER rather than the bytes,
@@ -86,7 +85,7 @@ interest       10         0
 # of the canned field stands the six towers of content/defense.txt for nothing
 # and sends content/field.txt's hundred gold from behind them; a run opens on an
 # empty board and pays for its wall and its wave out of this one row. At a
-# hundred, all twenty-two rows of content/sweep.csv read win_rate_bp 0 and
+# hundred, all twenty-two rows of the balance report of the day read win_rate_bp 0 and
 # cost_efficiency_dealt_per_100_gold 0 to 5 -- a run's offense landed under two
 # percent of what the field's own waves landed on it, which is a report that
 # separates nothing and a build phase nobody has a reason to think about.
@@ -115,7 +114,7 @@ income        168
 # phase stands, so a run that opened on nothing would have an opening round
 # whose only affordable wave is the empty one -- ten waves with nine build
 # phases in them. A hundred is enough to make the first round a round -- one
-# tower and a wave behind it -- and like every number here it is a sweep target
+# tower and a wave behind it -- and like every number here it is a tuning target
 # rather than a decision.
 #
 # IT IS DELIBERATELY SHORT OF A WAVE'S BASE. A run opens on an empty board, and
@@ -148,7 +147,7 @@ purse         100
 # HOLDING THE DEFENSE WELL PAYS NOTHING EXTRA, deliberately. A defense already
 # pays by not costing health, and health is the run's clock.
 #
-# 25 IS A STARTING FIGURE AND A SWEEP TARGET, exactly as the income base above
+# 25 IS A STARTING FIGURE AND A TUNING TARGET, exactly as the income base above
 # and the creep costs are. What it replaced paid one of 0, 8, 16 or 33 gold off
 # four percentile bands, so a round dealing 673 and a round dealing 36 were paid
 # the same 33 -- eighteen times the damage for identical pay.

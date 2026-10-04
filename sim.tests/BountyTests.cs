@@ -266,7 +266,7 @@ public class BountyTests
         // is minted into the one purse, so a row paying out more than it took
         // in would make killing the field's wave a better income than the
         // round's own -- and nothing downstream can see it, because the return
-        // band is a leak rate and the sweep's stand-in sends no paying row.
+        // band is a leak rate and the canned stand-in sends no paying row.
         // The fixture row costs twelve, so thirteen is refused and twelve is
         // not: the ceiling says "not more than", and how far under it a row
         // sits is that row's argument in docs/roster.md rather than the table's.

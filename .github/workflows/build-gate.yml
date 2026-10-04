@@ -115,8 +115,8 @@ jobs:
         run: ./tools/check-unity-test-inventory.ps1
 
       # The step that guards the golden artefacts -- the trace, the landmarks,
-      # content/golden/, the sweep, the run outcome, the replay and the command
-      # list -- against being quietly rewritten. Everything else here asks
+      # content/golden/, the run outcome, the replay and the command list --
+      # against being quietly rewritten. Everything else here asks
       # whether the simulation still produces them; nothing else can ask
       # whether they were meant to move, because a rules change plus a
       # regeneration is a green gate on this job and on all six matrix rows.

@@ -96,10 +96,9 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <b>The spelling lives in one place and this is the way out of it.</b>
-        /// A sweep played against a wall of one attack type writes that type's
-        /// name into its report, and a second copy of these three words in the
-        /// command line would be free to disagree with the one the content is
-        /// parsed by -- which is a file naming a wall the roster does not have.
+        /// A refusal or a report that names an attack type spells it from here,
+        /// and a second copy of these three words anywhere else would be free to
+        /// disagree with the one the content is parsed by.
         /// </remarks>
         public static string WordFor(AttackType attack)
         {

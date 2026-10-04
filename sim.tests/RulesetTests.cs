@@ -390,7 +390,7 @@ public class RulesetTests
     [Fact]
     public void Retuning_the_scouting_line_moves_the_hash_and_nothing_else()
     {
-        // The sweep's two dials, turned through the one seam that turns them.
+        // The economy's two dials, turned through the one seam that turns them.
         // Everything the retune did not name is carried across untouched --
         // asserted rather than assumed, because a copy constructor over sixteen
         // fields is exactly where a field goes missing quietly.
@@ -422,14 +422,14 @@ public class RulesetTests
     public void Retuning_to_the_numbers_already_authored_leaves_the_hash_where_it_was()
     {
         // The other half of a derivation, and the half that says the fold is
-        // over the values rather than over the act of retuning. A sweep left at
-        // AsAuthored plays the committed rules under the committed hash, so a
-        // record stamped against them still replays.
+        // over the values rather than over the act of retuning. A retune to the
+        // authored numbers plays the committed rules under the committed hash,
+        // so a record stamped against them still replays.
         //
         // OBSERVED: fold an extra Add(1) into the retuning constructor to mark a
         // ruleset as retuned. This goes red on a hash that moved for no number
-        // anybody authored, which retires every stored record on a sweep having
-        // run.
+        // anybody authored, which retires every stored record on a retune having
+        // happened.
         Ruleset authored = TheRuleset.Committed();
 
         Assert.Equal(
@@ -449,9 +449,9 @@ public class RulesetTests
     {
         // A number that reaches the rules through the retuning door has had no
         // file to be refused at, so it is held to the range the authored column
-        // is held to. Without that, a sweep is the one caller in the project
-        // able to build a ruleset no text file could express -- and every
-        // finding it produced would be about a game nobody can author.
+        // is held to. Without that, this is the one route in the project able
+        // to build a ruleset no text file could express -- and every run played
+        // under it would be a game nobody can author.
         //
         // OBSERVED: drop the RequireInRange calls from Ruleset.With. Both rows
         // go red having thrown nothing at all -- a snapshot at minus one gold

@@ -1,5 +1,11 @@
 # 0058 — A sweep row is a creep against one attack type, and the wall is an axis of the report
 
+> **Retired on 28 September 2026, with the harness.** `content/sweep.csv` and the `sweep` verb are deleted until
+> [its specification](../specs/sweep-harness.md) says what a row is for, and the attack-type restriction on
+> `FieldPool.Canned` and `CoverThenUpgradeBot.Decide` went with them, because nothing but a report ever
+> asked for a wall of one type. Read the rest as a record of the first build's shape; the ruling is in
+> [the decision log](../decision-log/2026-09.md#28-september-2026--the-balance-harness-comes-out-until-it-is-specified).
+
 **Decided.** `content/sweep.csv` scores **every creep against a wall of every attack type the roster has a
 tower for**, one row per pair, the wall named in a column of its own — fifteen rows on five creeps by three
 walls, where it was one row per creep against whatever the bot built.

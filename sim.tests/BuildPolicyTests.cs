@@ -1,7 +1,7 @@
 namespace Sim.Tests;
 
 /// <summary>
-/// The two scripted players a sweep row is played by: the defensive half that
+/// The two scripted players a run can be played by: the defensive half that
 /// covers the route and then upgrades what it stood, and the even share that
 /// composes it with a wave.
 /// </summary>
@@ -291,10 +291,9 @@ public class BuildPolicyTests
         // one. Five more rungs are flat against the row beneath them for the
         // same reason, and the rest are dear enough that a cheaper root on a
         // free cell outscores them. That is worth knowing rather than fixing
-        // here: the sweep's defense exercises no upgrade edge at all, so a
-        // balance question about any second or third rung cannot be answered
-        // from content/sweep.csv. It is a property of this bot's rule and not of
-        // the ladder.
+        // here: this bot's defense exercises no upgrade edge at all, so nothing
+        // a scripted run plays says anything about a second or third rung. It
+        // is a property of this bot's rule and not of the ladder.
         //
         // OBSERVED: score by price alone -- return the first type with anything
         // to gain out of CoverThenUpgradeBot.BestValue. This goes red on the
@@ -302,7 +301,7 @@ public class BuildPolicyTests
         //
         // OBSERVED: drop the Placeable filter from CoverThenUpgradeBot.Decide.
         // This goes red the other way, on a rung the ladder refuses to place,
-        // and every sweep in the project dies on that placement.
+        // and every scripted run in the project dies on that placement.
         UnitTypeTable types = TheMatch.Types();
         CostTable costs = CostTable.From(TheRuleset.Committed(), types);
         HexMap map = TheMatch.Map();

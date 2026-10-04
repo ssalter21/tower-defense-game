@@ -134,12 +134,10 @@ namespace Sim
         /// The same rule, over a board and a purse that belong to no run.
         /// </summary>
         /// <remarks>
-        /// Everything the rule reads, named one by one. A run holds the first
-        /// seven and hands them over; the canned field pool holds a board and a
-        /// purse of its own and no run at all, and a wall built by a second copy
-        /// of this rule is a wall that can disagree with the one a player
-        /// builds. The eighth is the pool's alone: a run is never restricted to
-        /// one attack type, and a sweep row always is.
+        /// Everything the rule reads, named one by one. A run holds all seven
+        /// and hands them over; the canned field pool holds a board and a purse
+        /// of its own and no run at all, and a wall built by a second copy of
+        /// this rule is a wall that can disagree with the one a player builds.
         /// </remarks>
         /// <param name="map">The board's map: where a cell is, and where the route runs.</param>
         /// <param name="types">The roster every placeable row is read out of.</param>
@@ -148,10 +146,6 @@ namespace Sim
         /// <param name="board">What stands before this round builds.</param>
         /// <param name="purse">What is held before this round builds, of which the wall takes a share.</param>
         /// <param name="capstoneTokens">How many capstone tokens the round holds, all of them spendable.</param>
-        /// <param name="only">
-        /// The one attack type this wall may be built out of, or nothing for
-        /// the whole roster.
-        /// </param>
         public static IReadOnlyList<BuildAction> Decide(
             HexMap map,
             UnitTypeTable types,
@@ -159,8 +153,7 @@ namespace Sim
             UpgradeLadder ladder,
             Board board,
             Purse purse,
-            int capstoneTokens,
-            AttackType? only = null)
+            int capstoneTokens)
         {
             if (map is null)
             {
@@ -192,19 +185,7 @@ namespace Sim
                 throw new ArgumentNullException(nameof(purse));
             }
 
-            UnitType[] byPrice = ByPrice(types, costs, only);
-
-            if (byPrice.Length == 0)
-            {
-                throw new SimulationException(
-                    "This bot was restricted to "
-                    + DamageMatrix.WordFor(only!.Value)
-                    + " towers and the roster has none. A wall of one attack type is a comparison against "
-                    + "that type, and a roster with nothing to build it out of is a wall of nothing rather "
-                    + "than an empty argument -- every row played against it would report a total leak and "
-                    + "read as a balance finding.");
-            }
-
+            UnitType[] byPrice = ByPrice(types, costs);
             UnitType[] placeable = Placeable(byPrice, ladder);
             bool[] covered = CoveredBy(map, board);
             var actions = new List<BuildAction>();
@@ -673,7 +654,7 @@ namespace Sim
         /// The ordering is an insertion by hand because the framework's sorts are
         /// unstable and banned here.
         /// </remarks>
-        private static UnitType[] ByPrice(UnitTypeTable types, CostTable costs, AttackType? only)
+        private static UnitType[] ByPrice(UnitTypeTable types, CostTable costs)
         {
             var ordered = new List<UnitType>();
 
@@ -682,18 +663,6 @@ namespace Sim
                 UnitType type = types.Types[index];
 
                 if (type.Role != UnitRole.Placed)
-                {
-                    continue;
-                }
-
-                // THE RESTRICTION IS APPLIED HERE AND NOWHERE ELSE, so it binds
-                // both halves of the rule: the cover loop places out of this
-                // list and the upgrade loop climbs the ladder out of it too. A
-                // filter on the placing half alone would build a pierce wall and
-                // then upgrade it into a mixed one, which is the failure this
-                // exists to prevent and would show up only as a report that
-                // stopped separating in its last rounds.
-                if (only is not null && type.AttackType != only.Value)
                 {
                     continue;
                 }
