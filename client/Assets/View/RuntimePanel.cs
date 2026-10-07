@@ -75,6 +75,37 @@ namespace View
         /// <summary>The one text colour on the chrome.</summary>
         public static Color LabelColor => new Color(0.9f, 0.92f, 0.95f, 1f);
 
+        public static Color BackdropColor => new Color(0.03f, 0.04f, 0.05f, 0.6f);
+
+        public static Button ControlButton(string name, string text, Action pressed, float width, float height, int fontSize)
+        {
+            var button = new Button(pressed) { name = name, text = text };
+
+            button.style.width = width;
+            button.style.height = height;
+            button.style.backgroundColor = ControlColor;
+            button.style.color = LabelColor;
+            button.style.fontSize = fontSize;
+
+            return button;
+        }
+
+        public static VisualElement Backdrop(string name)
+        {
+            var backdrop = new VisualElement { name = name };
+
+            backdrop.style.position = Position.Absolute;
+            backdrop.style.left = 0f;
+            backdrop.style.right = 0f;
+            backdrop.style.top = 0f;
+            backdrop.style.bottom = 0f;
+            backdrop.style.alignItems = Align.Center;
+            backdrop.style.justifyContent = Justify.Center;
+            backdrop.style.backgroundColor = BackdropColor;
+
+            return backdrop;
+        }
+
         /// <summary>
         /// One panel's settings, made rather than loaded — so whoever made it
         /// destroys it, and an orphaned one cannot outlive the play session.

@@ -1,0 +1,14 @@
+{
+  "outDir": "docs/chrome/wrapper",
+  "width": 1600,
+  "shots": [
+    { "id": "menu", "label": "The main menu over the idle board: start a run, settings, quit", "state": "menu",
+      "notes": "What the build opens on. No run has started; the board behind is the match root, idle." },
+
+    { "id": "settings", "label": "The settings screen: player name, lobby folder, display, resolution, each with what honouring it costs", "state": "settings",
+      "notes": "Volume is not shown: the game makes no sound, so there is nothing for it to honour." },
+
+    { "id": "over", "label": "A run played to its end: what it came to, and the way back to the menu", "state": "over",
+      "notes": "The scripted player plays every round it can; the header's one button reads the way back." }
+  ]
+}

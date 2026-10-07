@@ -99,6 +99,8 @@ namespace View
         /// <summary>What it says while a round is being watched.</summary>
         public const string GoOnLabel = "Next wave";
 
+        public const string BackToMenuLabel = "Back to menu";
+
         /// <summary>
         /// The value of <see cref="WatchingAttack"/> that means this round's own
         /// towers are the ones on screen. What a committed round opens on.
@@ -204,7 +206,6 @@ namespace View
         private int CapstoneTokensSpentByRoundsPlayed =>
             Run.CapstoneTokensGrantedThrough(Run.Round + 1) - Run.CapstoneTokens;
 
-        /// <summary>What the button says, or nothing where there is no button.</summary>
         public string ActionLabel
         {
             get
@@ -213,6 +214,7 @@ namespace View
                 {
                     case RunMode.Building: return CommitLabel;
                     case RunMode.Watching: return GoOnLabel;
+                    case RunMode.Over: return BackToMenuLabel;
                     default: return string.Empty;
                 }
             }
@@ -301,10 +303,6 @@ namespace View
             return loop;
         }
 
-        /// <summary>
-        /// The one button, whatever mode it is in. Composing commits; watching
-        /// goes on; a finished run does nothing, and the button is not drawn.
-        /// </summary>
         public void Press()
         {
             switch (Mode)
@@ -316,6 +314,11 @@ namespace View
 
                 case RunMode.Watching:
                     GoOn();
+
+                    break;
+
+                case RunMode.Over:
+                    _root.ReturnToMenu();
 
                     break;
             }

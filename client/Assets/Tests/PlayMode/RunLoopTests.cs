@@ -354,10 +354,6 @@ namespace Tests.PlayMode
                 "Round three is the first grant: one in hand, none spent, two still on the schedule.");
         }
 
-        /// <summary>
-        /// The end frame says what the run came to and where the script went,
-        /// and the button that moved the run on is gone.
-        /// </summary>
         [Test]
         public void TheEndFrameSaysWhatTheRunCameTo()
         {
@@ -367,7 +363,7 @@ namespace Tests.PlayMode
             Play(root, loop);
             loop.Header.Follow();
 
-            Assert.That(loop.Header.Action.text, Is.Empty, "There is nothing left to press.");
+            Assert.That(loop.Header.Action.text, Is.EqualTo(RunLoop.BackToMenuLabel), "An ended run offers the way back to the menu.");
             Assert.That(
                 loop.Header.Ending.text,
                 Does.Contain(TheFold),
