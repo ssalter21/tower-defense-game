@@ -66,22 +66,32 @@ namespace Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator SettingsOpenedDuringARunHoldTheBoardStillAndCloseBackToTheMatch()
+        public IEnumerator TheMenuPausedDuringARunHoldsTheBoardStillOffersQuitAndResumesTheMatch()
         {
             MatchRoot root = Playfield();
             MainMenu menu = OpenMenu(root);
             menu.StartRun();
 
-            menu.OpenSettings();
+            menu.Pause();
             yield return null;
 
+            Assert.That(menu.IsShown, Is.True);
+            Assert.That(menu.StartButton.text, Is.EqualTo(MainMenu.ResumeLabel));
+            Assert.That(menu.QuitButton.text, Is.EqualTo(MainMenu.QuitLabel));
             Assert.That(root.Pointer.enabled, Is.False);
 
+            menu.OpenSettings();
             menu.Settings.Close();
             yield return null;
 
-            Assert.That(root.Pointer.enabled, Is.True);
+            Assert.That(menu.IsShown, Is.True);
+            Assert.That(root.Pointer.enabled, Is.False);
+
+            menu.Resume();
+            yield return null;
+
             Assert.That(menu.IsShown, Is.False);
+            Assert.That(root.Pointer.enabled, Is.True);
         }
 
         [UnityTest]

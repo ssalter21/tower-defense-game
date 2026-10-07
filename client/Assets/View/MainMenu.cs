@@ -10,6 +10,8 @@ namespace View
     {
         public const string StartLabel = "Start a run";
 
+        public const string ResumeLabel = "Resume";
+
         public const string SettingsLabel = "Settings";
 
         public const string QuitLabel = "Quit";
@@ -73,6 +75,14 @@ namespace View
             _root.BeginRun(_seed, _launch.LobbyFolder, _art);
         }
 
+        public void Pause()
+        {
+            StartButton.text = ResumeLabel;
+            Show(true);
+        }
+
+        public void Resume() => Show(false);
+
         public void OpenSettings()
         {
             Show(false);
@@ -85,12 +95,12 @@ namespace View
         {
             if (RunIsGoing && EscapePressed())
             {
-                ToggleSettings();
+                StepBackFromEscape();
             }
 
             if (_root.Pointer != null)
             {
-                _root.Pointer.enabled = !Settings.IsShown;
+                _root.Pointer.enabled = !Settings.IsShown && !IsShown;
             }
         }
 
@@ -102,15 +112,31 @@ namespace View
         private static bool EscapePressed() =>
             Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
 
-        private void ToggleSettings()
+        private void StepBackFromEscape()
         {
             if (Settings.IsShown)
             {
                 Settings.Close();
             }
+            else if (IsShown)
+            {
+                Resume();
+            }
             else
             {
-                Settings.Open();
+                Pause();
+            }
+        }
+
+        private void StartOrResume()
+        {
+            if (RunIsGoing)
+            {
+                Resume();
+            }
+            else
+            {
+                StartRun();
             }
         }
 
@@ -128,13 +154,13 @@ namespace View
             _screen = RuntimePanel.Backdrop("Menu");
             document.rootVisualElement.Add(_screen);
 
-            StartButton = AddButton(_screen, "Start", StartLabel, StartRun);
+            StartButton = AddButton(_screen, "Start", StartLabel, StartOrResume);
             SettingsButton = AddButton(_screen, "Settings", SettingsLabel, OpenSettings);
             QuitButton = AddButton(_screen, "Quit", QuitLabel, Quit);
-            _screen.Add(Unsigned.Mark(StartLabel + ", " + SettingsLabel + ", " + QuitLabel));
+            _screen.Add(Unsigned.Mark(StartLabel + ", " + ResumeLabel + ", " + SettingsLabel + ", " + QuitLabel));
 
             Settings = SettingsScreen.Build(_root.transform, _launch);
-            Settings.Closed += () => Show(!RunIsGoing);
+            Settings.Closed += () => Show(true);
         }
 
         private static Button AddButton(VisualElement screen, string name, string text, Action pressed)

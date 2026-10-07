@@ -28,4 +28,4 @@ be signed from a picture rather than from a description; the sitting that signs 
 - **Display** (full screen or windowed) and **resolution** are honoured the moment they change.
 - **Volume is not shown.** The game makes no sound, so a slider would honour nothing.
 
-The same settings screen opens over a run with Escape, and the board takes no clicks while it is up.
+Escape during a run brings the menu back with Resume in place of Start a run, so Settings and Quit are reachable mid-run; the board takes no clicks while the menu or settings is up, and closing settings returns to the menu.
