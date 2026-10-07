@@ -81,6 +81,8 @@ the width at which today's nine roots exactly fill the bar, and a tenth turns `C
 chosen arrangement above is still the direction; these keep the roster's forty-four rows on screen until it is
 built.
 
+**The wrapper** is in [`wrapper/`](wrapper/README.md): the main menu, the settings screen and a run's way back to the menu, in placeholder words, drawn by `tools/capture-wrapper.ps1`.
+
 **The baseline**, three sheets of the chrome as it stands, which is what a candidate is held against:
 
 - `as-built-build.png` — the opening build phase. A hundred gold, nothing placed, nothing sent.

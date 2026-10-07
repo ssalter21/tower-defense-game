@@ -79,11 +79,12 @@ $declaration = @'
   3  client/Assets/Tests/PlayMode/PlayfieldRebuildTests.cs
   3  client/Assets/Tests/PlayMode/RealRigSamplingTests.cs
  14  client/Assets/Tests/PlayMode/RunLoopTests.cs
-  1  client/Assets/Tests/PlayMode/ShippedSceneTests.cs
+  2  client/Assets/Tests/PlayMode/ShippedSceneTests.cs
   2  client/Assets/Tests/PlayMode/SimPluginTests.cs
   5  client/Assets/Tests/PlayMode/StoredPoolTests.cs
  21  client/Assets/Tests/PlayMode/WaveTests.cs
   4  client/Assets/Tests/PlayMode/WeaponSocketTests.cs
+  7  client/Assets/Tests/PlayMode/WrapperTests.cs
 '@
 
 # The runners this script sends a reader to, named once and checked, so a

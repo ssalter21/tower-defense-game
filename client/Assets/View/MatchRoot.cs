@@ -1,5 +1,6 @@
 using Sim;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 namespace View
@@ -99,7 +100,7 @@ namespace View
 
         /// <summary>
         /// Build, commit, watch, ten waves — and which of those is on screen.
-        /// Null until <see cref="BeginRun(ulong)"/>.
+        /// Null until <see cref="BeginRun(ulong, string, MatchArt)"/>.
         /// </summary>
         public RunLoop Loop { get; private set; }
 
@@ -142,37 +143,10 @@ namespace View
         /// <summary>What turns a click into a build action.</summary>
         public BuildInput Pointer { get; private set; }
 
-        /// <summary>
-        /// The scene opens on the first round's build phase, and there is no
-        /// match on screen until one has been committed.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>The recorded match is not what a player sees any more.</b> It was,
-        /// for the whole of the walking skeleton, and while the build chrome had
-        /// no modes to switch between it went on playing underneath one — so a
-        /// composed tower could be stood on a hex a recorded tower was already
-        /// drawn on. Two things drawing one board is what the mode switch
-        /// removes. The record is still read, for the playfield and for the
-        /// seed; what is gone is the match built from it. It is still reachable
-        /// through <see cref="BeginMatch(UnitTypeTable, Ruleset, ReplayBundle, MatchArt)"/>,
-        /// which is what the frame capture draws.
-        /// </para>
-        /// <para>
-        /// Missing content is reported and not thrown. A player whose streaming
-        /// copy was never generated should show its playfield and say what is
-        /// missing, rather than dying in <c>Awake</c> and leaving a scene that
-        /// is half built for a reason nobody can see. The build gate is where a
-        /// missing content file is supposed to be caught, and it is caught
-        /// there.
-        /// </para>
-        /// </remarks>
+        public MainMenu Menu { get; private set; }
+
         private void Awake()
         {
-            // Read once, used twice. The floor is drawn from the record's own
-            // inlined grid rather than from map.txt, because the floor and the
-            // run have to be the same playfield and the only way to be certain
-            // of that is for there to be one of them.
             ReplayBundle record = StreamingContent.HasEveryMatchFile()
                 ? StreamingContent.ReadRecordedMatch()
                 : null;
@@ -185,7 +159,7 @@ namespace View
             if (record == null)
             {
                 Debug.LogWarning(
-                    "MatchRoot: no run started — the streaming copy is incomplete. Run "
+                    "MatchRoot: nothing to play -- the streaming copy is incomplete. Run "
                     + "tools/sync-streaming-content.ps1 and commit what it writes. Looked in "
                     + StreamingContent.Directory);
 
@@ -195,74 +169,33 @@ namespace View
             if (!art.IsComplete)
             {
                 Debug.LogWarning(
-                    "MatchRoot: no run started — the art is not wired up. The scene is generated: run "
+                    "MatchRoot: nothing to play -- the art is not wired up. The scene is generated: run "
                     + "tools/build-match-scene.ps1 and commit what it writes.");
 
                 return;
             }
 
-            if (Loop == null)
+            if (Loop == null && Menu == null)
             {
-                BeginRun(record.Seed);
+                OpenMenu(record.Seed, art, LaunchSettings.ForThisLaunch);
             }
         }
 
-        /// <summary>
-        /// Stands a run up on the playfield this object already built, and opens
-        /// its first build phase.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>The seed is the record's, like the match's.</b> This assembly
-        /// cannot read a clock and is not going to start: a run seeded from the
-        /// wall clock would be a different game every time somebody pressed
-        /// play, which is exactly the property that makes a playtest also a
-        /// determinism test.
-        /// </para>
-        /// <para>
-        /// <b>The field is the canned pairing</b> — the committed defense
-        /// behind the canned round, which is the population
-        /// <c>content/defense.txt</c> and <c>content/field.txt</c> describe.
-        /// <b>Not <c>content/wave.txt</c></b>: that is a whole authored match
-        /// and a run scored against one dies of health in round three. See
-        /// <see cref="StreamingContent.FieldFileName"/>. The field is a number
-        /// rather than anything on screen: the player watches one member of it,
-        /// and what the wave got past all ten of them is what feeds the purse.
-        /// </para>
-        /// <para>
-        /// <b>The run arrives as a way to make one, not as one already made.</b>
-        /// Proving the session on the way out needs a second run on the same
-        /// seed and the same shape that nothing has been played into, and a
-        /// factory is the only thing that can hand back both.
-        /// </para>
-        /// </remarks>
-        /// <param name="seed">The one seed every draw in the run is derived from.</param>
-        public RunLoop BeginRun(ulong seed) =>
-            BeginRun(seed, Application.persistentDataPath, art);
+        public MainMenu OpenMenu(ulong seed, MatchArt art, LaunchSettings launch)
+        {
+            if (Map == null)
+            {
+                throw new System.InvalidOperationException(
+                    "OpenMenu was called before Build, so there is no playfield to start a run on.");
+            }
 
-        /// <summary>
-        /// The same, writing the session's script into a folder the caller names
-        /// and drawing it with art the caller supplies.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// What a test calls, for two reasons. The folder, so a run played by a
-        /// test does not write over the one a person played; and the art, which
-        /// is the same seam and the same reason as
-        /// <see cref="BeginBuilding(ComposedRound, MatchArt)"/> — a caller that
-        /// has the assets in hand and no generated scene to read them from would
-        /// otherwise get nothing on exactly the checkout where somebody is
-        /// trying to see whether the run works.
-        /// </para>
-        /// <para>
-        /// <b>The folder is where the pool comes from as well.</b> A run is
-        /// resolved against the stored rounds beside it, so a fixture pinning a
-        /// run's numbers has to control which rounds those are — otherwise
-        /// somebody who has played, or run <c>tools/seed-pool.ps1</c>, turns
-        /// every such fixture red for a reason that has nothing to do with the
-        /// code. <see cref="PoolDirectory"/> is what this points somewhere else.
-        /// </para>
-        /// </remarks>
+            Menu = MainMenu.Build(this, seed, art, launch);
+
+            return Menu;
+        }
+
+        public void ReturnToMenu() => SceneManager.LoadScene(gameObject.scene.name);
+
         public RunLoop BeginRun(ulong seed, string directory, MatchArt art)
         {
             if (Map == null)

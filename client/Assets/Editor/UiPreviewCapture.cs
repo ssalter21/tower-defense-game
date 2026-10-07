@@ -333,7 +333,9 @@ namespace View.Editor
             // with no sides and shows the background through every step.
             root.Build(record.Map, MatchSceneBuilder.Tiles(), MatchSceneBuilder.Scenery(), MatchSceneBuilder.Dressing());
 
-            RunLoop loop = root.BeginRun(record.Seed, Path.GetTempPath(), MatchSceneBuilder.Art());
+            RunLoop loop = OpensOnTheWrapper(shot)
+                ? null
+                : root.BeginRun(record.Seed, RunFolder(shot), MatchSceneBuilder.Art());
 
             Camera camera = root.CameraRig.Camera;
             camera.backgroundColor = SceneFraming.BackgroundColor;
@@ -354,8 +356,16 @@ namespace View.Editor
                 SceneFraming.CameraDefaultPitchDegrees,
                 root.CameraRig.FramedDistance);
 
-            PlayTo(root, loop, shot.wave);
-            ApplyState(shot, root, loop);
+            if (loop == null)
+            {
+                OpenWrapper(shot, root, record.Seed);
+            }
+            else
+            {
+                PlayTo(root, loop, shot.wave);
+                ApplyState(shot, root, loop);
+            }
+
             ApplyCandidate(shot, root, loop);
 
             Redirect(root, loop);
@@ -374,20 +384,8 @@ namespace View.Editor
 
             while (loop.Wave < wave)
             {
-                ComposedRound round = root.Composing;
-
-                foreach (BuildAction action in CoverThenUpgradeBot.Decide(loop.Run))
-                {
-                    round.Do(action);
-                }
-
-                root.Building.Follow();
-                root.Palette.Follow();
-
-                SendOneOfEach(root);
-
                 int played = loop.Wave;
-                loop.Commit();
+                PlayOneRound(root, loop);
 
                 if (loop.Run.IsOver)
                 {
@@ -398,6 +396,50 @@ namespace View.Editor
                 }
 
                 loop.GoOn();
+            }
+        }
+
+        private static void PlayToTheEnd(MatchRoot root, RunLoop loop)
+        {
+            while (loop.Mode != RunMode.Over)
+            {
+                PlayOneRound(root, loop);
+                loop.GoOn();
+            }
+        }
+
+        private static void PlayOneRound(MatchRoot root, RunLoop loop)
+        {
+            ComposedRound round = root.Composing;
+
+            foreach (BuildAction action in CoverThenUpgradeBot.Decide(loop.Run))
+            {
+                round.Do(action);
+            }
+
+            root.Building.Follow();
+            root.Palette.Follow();
+
+            SendOneOfEach(root);
+
+            loop.Commit();
+        }
+
+        private static bool OpensOnTheWrapper(ShotSpec shot) =>
+            shot.state == "menu" || shot.state == "settings";
+
+        private static string RunFolder(ShotSpec shot) =>
+            shot.state == "over"
+                ? Path.Combine(Path.GetTempPath(), "UiPreviewCapture-" + Guid.NewGuid().ToString("N"))
+                : Path.GetTempPath();
+
+        private static void OpenWrapper(ShotSpec shot, MatchRoot root, ulong seed)
+        {
+            MainMenu menu = root.OpenMenu(seed, MatchSceneBuilder.Art(), new LaunchSettings());
+
+            if (shot.state == "settings")
+            {
+                menu.OpenSettings();
             }
         }
 
@@ -453,6 +495,10 @@ namespace View.Editor
                 case "build":
                     return;
 
+                case "over":
+                    PlayToTheEnd(root, loop);
+                    return;
+
                 case "build-placed":
                     Place(root, shot, out _, out _);
                     Send(root, 2);
@@ -494,8 +540,8 @@ namespace View.Editor
 
                 default:
                     throw new InvalidDataException(
-                        "No state called \"" + shot.state + "\". It is build, build-placed, build-hover "
-                        + "or build-offer.");
+                        "No state called \"" + shot.state + "\". It is build, build-placed, build-hover, "
+                        + "build-offer, over, menu or settings.");
             }
         }
 

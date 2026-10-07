@@ -29,7 +29,7 @@ those exact bytes. That is why this reads "drag to tick 1778, then back to tick
 
 Then double-click `client/Builds/Windows/TowerDefense.exe`.
 
-**A build opens on a run's first build phase, and these twelve rows are written about `content/match.replay`.**
+**A build opens on the main menu, its first button starts a run on the first build phase, and these twelve rows are written about `content/match.replay`.**
 Compose a round and press Done and the round you get is a match with the same controls over it, which is what
 rows 1, 2, 3, 11 and 12 need — they ask about the floor, the models, the camera and the build itself, and any
 match answers them. Rows 4 to 10 name a tick, and the ticks are a tick of the recorded match; a round you
