@@ -429,9 +429,19 @@ namespace View.Editor
             shot.state == "menu" || shot.state == "settings";
 
         private static string RunFolder(ShotSpec shot) =>
-            shot.state == "over"
-                ? Path.Combine(Path.GetTempPath(), "UiPreviewCapture-" + Guid.NewGuid().ToString("N"))
-                : Path.GetTempPath();
+            shot.state == "over" ? EmptiedOverFolder() : Path.GetTempPath();
+
+        private static string EmptiedOverFolder()
+        {
+            string folder = Path.Combine(Path.GetTempPath(), "UiPreviewCapture-over");
+
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+
+            return folder;
+        }
 
         private static void OpenWrapper(ShotSpec shot, MatchRoot root, ulong seed)
         {

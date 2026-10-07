@@ -153,22 +153,17 @@ namespace View
             AddRow(card, "Display", DisplayLabel, Display, DisplayCost);
 
             _resolutions = OfferedResolutions();
-            ScreenSize = new DropdownField(_resolutions.Select(Words).ToList(), CurrentSizeIndex());
+            ScreenSize = new DropdownField(_resolutions.Select(Text).ToList(), CurrentSizeIndex());
             ScreenSize.RegisterValueChangedCallback(_ => ApplySize(_resolutions[ScreenSize.index]));
             AddRow(card, "Resolution", ResolutionLabel, ScreenSize, ResolutionCost);
 
-            Back = new Button(Close) { name = "Back", text = BackLabel };
-            Back.style.width = BackWidth;
-            Back.style.height = BackHeight;
+            Back = RuntimePanel.ControlButton("Back", BackLabel, Close, BackWidth, BackHeight, NameFontSize);
             Back.style.alignSelf = Align.Center;
             Back.style.marginTop = RowGap;
-            Back.style.backgroundColor = RuntimePanel.ControlColor;
-            Back.style.color = RuntimePanel.LabelColor;
-            Back.style.fontSize = NameFontSize;
             card.Add(Back);
 
             card.Add(Unsigned.Mark(string.Join(", ", PlayerNameLabel, LobbyFolderLabel, DisplayLabel,
-                ResolutionLabel, BackLabel)));
+                FullScreenChoice, WindowedChoice, ResolutionLabel, BackLabel)));
         }
 
         private static FullScreenMode ModeFor(string choice) =>
@@ -193,9 +188,9 @@ namespace View
         private int CurrentSizeIndex() =>
             Array.FindIndex(_resolutions, size => size.width == Screen.width && size.height == Screen.height);
 
-        private static string Words(Resolution size) => size.width + " x " + size.height;
+        private static string Text(Resolution size) => size.width + " x " + size.height;
 
-        private void AddRow(VisualElement card, string name, string words, VisualElement control, string cost)
+        private void AddRow(VisualElement card, string name, string text, VisualElement control, string cost)
         {
             var row = new VisualElement { name = name };
             row.style.marginBottom = RowGap;
@@ -204,7 +199,7 @@ namespace View
             line.style.flexDirection = FlexDirection.Row;
             line.style.alignItems = Align.Center;
 
-            var label = new Label(words) { pickingMode = PickingMode.Ignore };
+            var label = new Label(text) { pickingMode = PickingMode.Ignore };
             label.style.width = NameWidth;
             label.style.color = RuntimePanel.LabelColor;
             label.style.fontSize = NameFontSize;
@@ -226,7 +221,6 @@ namespace View
 
             _rows.Add(row);
         }
-
 
         private static VisualElement Card()
         {

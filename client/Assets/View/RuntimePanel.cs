@@ -77,6 +77,19 @@ namespace View
 
         public static Color BackdropColor => new Color(0.03f, 0.04f, 0.05f, 0.6f);
 
+        public static Button ControlButton(string name, string text, Action pressed, float width, float height, int fontSize)
+        {
+            var button = new Button(pressed) { name = name, text = text };
+
+            button.style.width = width;
+            button.style.height = height;
+            button.style.backgroundColor = ControlColor;
+            button.style.color = LabelColor;
+            button.style.fontSize = fontSize;
+
+            return button;
+        }
+
         public static VisualElement Backdrop(string name)
         {
             var backdrop = new VisualElement { name = name };

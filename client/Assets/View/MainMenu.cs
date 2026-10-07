@@ -137,18 +137,10 @@ namespace View
             Settings.Closed += () => Show(!RunIsGoing);
         }
 
-
-        private static Button AddButton(VisualElement screen, string name, string words, Action pressed)
+        private static Button AddButton(VisualElement screen, string name, string text, Action pressed)
         {
-            var button = new Button(pressed) { name = name, text = words };
-
-            button.style.width = ButtonWidth;
-            button.style.height = ButtonHeight;
+            Button button = RuntimePanel.ControlButton(name, text, pressed, ButtonWidth, ButtonHeight, ButtonFontSize);
             button.style.marginBottom = RuntimePanel.ControlGap;
-            button.style.backgroundColor = RuntimePanel.ControlColor;
-            button.style.color = RuntimePanel.LabelColor;
-            button.style.fontSize = ButtonFontSize;
-
             screen.Add(button);
 
             return button;

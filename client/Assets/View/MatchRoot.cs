@@ -98,10 +98,6 @@ namespace View
         /// <summary>The art the match is drawn with.</summary>
         public MatchArt Art => art;
 
-        /// <summary>
-        /// Build, commit, watch, ten waves — and which of those is on screen.
-        /// Null until <see cref="BeginRun(ulong, string, MatchArt)"/>.
-        /// </summary>
         public RunLoop Loop { get; private set; }
 
         /// <summary>
