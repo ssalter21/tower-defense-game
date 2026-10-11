@@ -240,6 +240,11 @@ namespace View
 
         private void AddLabel(HexWheelWedge wedge, Vector2 offset)
         {
+            if (string.IsNullOrEmpty(wedge.Word))
+            {
+                return;
+            }
+
             var label = new VisualElement { name = "Wedge " + wedge.Word, pickingMode = PickingMode.Ignore };
 
             label.style.position = Position.Absolute;

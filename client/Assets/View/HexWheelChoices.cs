@@ -18,9 +18,9 @@ namespace View
             Outward = outward ?? Nothing;
         }
 
-        private HexWheelWedge(string word)
+        private HexWheelWedge()
         {
-            Word = word;
+            Word = string.Empty;
             Price = string.Empty;
             Undesigned = true;
             Outward = Nothing;
@@ -40,13 +40,11 @@ namespace View
 
         public IReadOnlyList<HexWheelWedge> Outward { get; }
 
-        public static HexWheelWedge Unfilled(string word) => new HexWheelWedge(word);
+        public static HexWheelWedge Unfilled() => new HexWheelWedge();
     }
 
     public static class HexWheelChoices
     {
-        public const string CapstonePlace = "capstone";
-
         public static IReadOnlyList<HexWheelWedge> EveryRoot(ComposedRound round)
         {
             var wedges = new List<HexWheelWedge>();
@@ -121,7 +119,7 @@ namespace View
 
             if (!capstoneOffered && CapstoneAbove(ladder, standing.Id))
             {
-                wedges.Add(HexWheelWedge.Unfilled(CapstonePlace));
+                wedges.Add(HexWheelWedge.Unfilled());
             }
 
             return wedges;

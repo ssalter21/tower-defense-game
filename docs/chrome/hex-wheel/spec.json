@@ -9,7 +9,7 @@
     { "id": "1c-empty-roots-with-ladders", "label": "1c  Empty hex: every root with its ladder drawn outward from its wedge", "state": "build", "candidate": "HexWheelRootsWithLadders",
       "notes": "The same purse as 1a. Each root's rungs in content/upgrades.txt as rings beyond its wedge, at the same depth per ring, neither shrunk nor tuned to fit." },
     { "id": "2-occupied-archer", "label": "2  Occupied hex: an archer on its first rung, its upgrade and the capstone's place", "state": "build", "candidate": "HexWheelOccupied",
-      "notes": "The archer placed on the same hex. The ranger is the one rung the ladder offers it; the outlined wedge marks where the capstone goes and is not designed." },
+      "notes": "The archer placed on the same hex. The ranger is the one rung the ladder offers it; the outlined, wordless wedge marks where the capstone goes and is not designed." },
     { "id": "3a-wave-on-the-bar", "label": "3a  Wave composed on the bar as today; the wheel only on a buildable hex", "state": "build", "candidate": "HexWheelWaveOnTheBar",
       "notes": "Two creeps sent through the bar and its list open on the next box, with the roots' wheel on the buildable hex." },
     { "id": "3b-wave-on-the-entrance", "label": "3b  Wave composed in a wheel on the entrance hex; the bar gone", "state": "build", "candidate": "HexWheelWaveOnTheEntrance",

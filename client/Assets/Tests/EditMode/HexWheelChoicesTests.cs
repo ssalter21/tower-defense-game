@@ -70,6 +70,7 @@ namespace Tests.EditMode
             Assert.That(wedges, Has.Count.EqualTo(2));
             Assert.That(wedges[0].Type.Id, Is.EqualTo(RangerId));
             Assert.That(wedges[1].Undesigned, Is.True);
+            Assert.That(wedges[1].Word, Is.Empty);
             Assert.That(wedges[1].Price, Is.Empty);
         }
 

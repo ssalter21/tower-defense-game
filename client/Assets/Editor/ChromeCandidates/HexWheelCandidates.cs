@@ -60,7 +60,7 @@ namespace View.Editor.ChromeCandidates
 
         public static void ComposeOnTheBar(MatchRoot root) => UiPreviewCapture.Send(root, CreepsOnTheWave);
 
-        public static void Refuse(HexWheel wheel, string what)
+        public static void RequireWedges(HexWheel wheel, string what)
         {
             if (wheel.Wedges.Count == 0)
             {
@@ -148,7 +148,7 @@ namespace View.Editor.ChromeCandidates
 
             HexWheel wheel = HexWheelStage.Wheel(root);
             wheel.Open(column, row, HexWheelChoices.EveryRoot(root.Composing));
-            HexWheelStage.Refuse(wheel, "an empty hex");
+            HexWheelStage.RequireWedges(wheel, "an empty hex");
         }
     }
 
@@ -161,7 +161,7 @@ namespace View.Editor.ChromeCandidates
 
             HexWheel wheel = HexWheelStage.Wheel(root);
             wheel.Open(column, row, HexWheelChoices.AffordableRoots(root.Composing));
-            HexWheelStage.Refuse(wheel, "an empty hex");
+            HexWheelStage.RequireWedges(wheel, "an empty hex");
 
             if (wheel.Wedges.Count == root.Composing.Palette.Count)
             {
@@ -180,7 +180,7 @@ namespace View.Editor.ChromeCandidates
 
             HexWheel wheel = HexWheelStage.Wheel(root);
             wheel.Open(column, row, HexWheelChoices.RootsWithLadders(root.Composing, loop.Run.Ladder, loop.Run.Types));
-            HexWheelStage.Refuse(wheel, "an empty hex");
+            HexWheelStage.RequireWedges(wheel, "an empty hex");
         }
     }
 
@@ -198,7 +198,7 @@ namespace View.Editor.ChromeCandidates
             HexWheel wheel = HexWheelStage.Wheel(root);
             IReadOnlyList<HexWheelWedge> wedges = HexWheelChoices.Upgrades(round, loop.Run.Ladder, column, row);
             wheel.Open(column, row, wedges);
-            HexWheelStage.Refuse(wheel, "the archer");
+            HexWheelStage.RequireWedges(wheel, "the archer");
 
             if (!wedges[wedges.Count - 1].Undesigned)
             {
@@ -226,7 +226,7 @@ namespace View.Editor.ChromeCandidates
 
             HexWheel wheel = HexWheelStage.Wheel(root);
             wheel.Open(column, row, HexWheelChoices.EveryRoot(root.Composing));
-            HexWheelStage.Refuse(wheel, "a buildable hex");
+            HexWheelStage.RequireWedges(wheel, "a buildable hex");
         }
     }
 
@@ -241,7 +241,7 @@ namespace View.Editor.ChromeCandidates
 
             HexWheel wheel = HexWheelStage.Wheel(root);
             wheel.Open(column, row, HexWheelChoices.Creeps(root.Composing));
-            HexWheelStage.Refuse(wheel, "the entrance hex");
+            HexWheelStage.RequireWedges(wheel, "the entrance hex");
         }
     }
 
@@ -254,7 +254,7 @@ namespace View.Editor.ChromeCandidates
 
             HexWheel wheel = HexWheelStage.Wheel(root);
             wheel.Open(column, row, HexWheelChoices.EveryRoot(root.Composing), showsCovered: true);
-            HexWheelStage.Refuse(wheel, "the hovered hex");
+            HexWheelStage.RequireWedges(wheel, "the hovered hex");
         }
     }
 
@@ -274,7 +274,7 @@ namespace View.Editor.ChromeCandidates
 
             HexWheel wheel = HexWheelStage.Wheel(root);
             wheel.Open(column, row, wedges);
-            HexWheelStage.Refuse(wheel, "the clicked hex");
+            HexWheelStage.RequireWedges(wheel, "the clicked hex");
         }
     }
 }

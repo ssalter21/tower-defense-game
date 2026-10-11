@@ -34,7 +34,7 @@
             "candidate": "HexWheelOccupied",
             "wave": 1,
             "png": "2-occupied-archer.png",
-            "notes": "The archer placed on the same hex. The ranger is the one rung the ladder offers it; the outlined wedge marks where the capstone goes and is not designed."
+            "notes": "The archer placed on the same hex. The ranger is the one rung the ladder offers it; the outlined, wordless wedge marks where the capstone goes and is not designed."
         },
         {
             "id": "3a-wave-on-the-bar",
