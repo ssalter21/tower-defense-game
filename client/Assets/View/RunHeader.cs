@@ -183,6 +183,7 @@ namespace View
 
             _ending = EndingPanel();
             Ending = AddEnding(_ending);
+            _ending.Add(Unsigned.Mark(RunLoop.BackToMenuLabel));
             document.rootVisualElement.Add(_ending);
 
             Follow();

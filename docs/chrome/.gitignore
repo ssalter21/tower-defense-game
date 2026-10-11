@@ -32,3 +32,9 @@ manifest.json
 # baseline sheets above can show.
 !overflows/*.png
 !overflows/manifest.json
+
+# wrapper/ is the same kind of exception: the main menu, the settings screen and
+# a run's way back to the menu, drawn by tools/capture-wrapper.ps1 from the spec
+# beside them, because none of the three is a build phase the baseline can show.
+!wrapper/*.png
+!wrapper/manifest.json

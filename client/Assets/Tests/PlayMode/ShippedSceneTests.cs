@@ -64,5 +64,29 @@ namespace Tests.PlayMode
 
             yield return null;
         }
+
+        [UnityTest]
+        public IEnumerator TheShippedSceneOpensOnTheMenuWithNoRunStarted()
+        {
+            yield return SceneManager.LoadSceneAsync(Scene, LoadSceneMode.Additive);
+
+            try
+            {
+                MatchRoot root = SceneManager.GetSceneByName(Scene)
+                    .GetRootGameObjects()
+                    .Select(host => host.GetComponentInChildren<MatchRoot>())
+                    .First(found => found != null);
+
+                Assert.That(root.Loop, Is.Null);
+                Assert.That(root.Menu, Is.Not.Null);
+                Assert.That(root.Menu.IsShown, Is.True);
+            }
+            finally
+            {
+                SceneManager.UnloadSceneAsync(Scene);
+            }
+
+            yield return null;
+        }
     }
 }
