@@ -38,3 +38,9 @@ manifest.json
 # beside them, because none of the three is a build phase the baseline can show.
 !wrapper/*.png
 !wrapper/manifest.json
+
+# hex-wheel/ holds the hex wheel's candidates for issue #323 and their contact
+# sheet, drawn by tools/capture-hex-wheel.ps1 from the spec beside them, so the
+# wheel's three decisions are taken from a picture.
+!hex-wheel/*.png
+!hex-wheel/manifest.json

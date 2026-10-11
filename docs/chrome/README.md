@@ -83,6 +83,11 @@ built.
 
 **The wrapper** is in [`wrapper/`](wrapper/README.md): the main menu, the settings screen and a run's way back to the menu, in placeholder words, drawn by `tools/capture-wrapper.ps1`.
 
+**The hex wheel's candidates** are in `hex-wheel/`: eight frames of the wheel open on the same hex, for
+[#323](https://github.com/ssalter21/tower-defense-game/issues/323) — what an empty hex holds, where the wave is
+composed, and whether the wheel opens on hover or on click — and `hex-wheel-sheet.png`, which holds all eight
+labelled. Drawn by `tools/capture-hex-wheel.ps1` from the spec beside them; what each frame shows is in its notes.
+
 **The baseline**, three sheets of the chrome as it stands, which is what a candidate is held against:
 
 - `as-built-build.png` — the opening build phase. A hundred gold, nothing placed, nothing sent.
