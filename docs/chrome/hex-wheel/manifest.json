@@ -1,0 +1,76 @@
+{
+    "shots": [
+        {
+            "id": "1a-empty-every-root",
+            "label": "1a  Empty hex: all nine roots as nine wedges",
+            "state": "build",
+            "candidate": "HexWheelEveryRoot",
+            "wave": 1,
+            "png": "1a-empty-every-root.png",
+            "notes": "Creeps sent through the bar until the purse holds 35 gold or less, so it no longer covers every root; a root it cannot cover keeps its wedge and shows its price in the palette's unaffordable red."
+        },
+        {
+            "id": "1b-empty-affordable-roots",
+            "label": "1b  Empty hex: only the roots the purse affords, the rest absent",
+            "state": "build",
+            "candidate": "HexWheelAffordableRoots",
+            "wave": 1,
+            "png": "1b-empty-affordable-roots.png",
+            "notes": "The same purse as 1a. A root it cannot cover has no wedge at all, so the wheel has fewer, wider wedges."
+        },
+        {
+            "id": "1c-empty-roots-with-ladders",
+            "label": "1c  Empty hex: every root with its ladder drawn outward from its wedge",
+            "state": "build",
+            "candidate": "HexWheelRootsWithLadders",
+            "wave": 1,
+            "png": "1c-empty-roots-with-ladders.png",
+            "notes": "The same purse as 1a. Each root's rungs in content/upgrades.txt as rings beyond its wedge, at the same depth per ring, neither shrunk nor tuned to fit."
+        },
+        {
+            "id": "2-occupied-archer",
+            "label": "2  Occupied hex: an archer on its first rung, its upgrade and the capstone's place",
+            "state": "build",
+            "candidate": "HexWheelOccupied",
+            "wave": 1,
+            "png": "2-occupied-archer.png",
+            "notes": "The archer placed on the same hex. The ranger is the one rung the ladder offers it; the outlined, wordless wedge marks where the capstone goes and is not designed."
+        },
+        {
+            "id": "3a-wave-on-the-bar",
+            "label": "3a  Wave composed on the bar as today; the wheel only on a buildable hex",
+            "state": "build",
+            "candidate": "HexWheelWaveOnTheBar",
+            "wave": 1,
+            "png": "3a-wave-on-the-bar.png",
+            "notes": "Two creeps sent through the bar and its list open on the next box, with the roots' wheel on the buildable hex."
+        },
+        {
+            "id": "3b-wave-on-the-entrance",
+            "label": "3b  Wave composed in a wheel on the entrance hex; the bar gone",
+            "state": "build",
+            "candidate": "HexWheelWaveOnTheEntrance",
+            "wave": 1,
+            "png": "3b-wave-on-the-entrance.png",
+            "notes": "The same two creeps sent. The wave bar is hidden; the creeps already in the wave are wedges in the palette's chosen blue with their count, and the creeps the purse can still send are wedges with their price, around the route's first hex."
+        },
+        {
+            "id": "4a-opened-on-hover",
+            "label": "4a  Opened on hover: the hexes the wheel covers outlined through it",
+            "state": "build",
+            "candidate": "HexWheelOnHover",
+            "wave": 1,
+            "png": "4a-opened-on-hover.png",
+            "notes": "The hex lit as the pointer's hover and the wheel opened on it, its wedges see-through and every hex whose middle lies under it outlined."
+        },
+        {
+            "id": "4b-opened-on-click",
+            "label": "4b  Opened on click: the hover still lit on another hex",
+            "state": "build",
+            "candidate": "HexWheelOnClick",
+            "wave": 1,
+            "png": "4b-opened-on-click.png",
+            "notes": "The wheel opened on the clicked hex and the hover light on the nearest buildable hex clear of it."
+        }
+    ]
+}
