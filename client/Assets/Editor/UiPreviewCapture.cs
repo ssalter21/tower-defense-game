@@ -707,7 +707,7 @@ namespace View.Editor
         /// empty, so the index sent to is always the box past the last one
         /// filled.
         /// </remarks>
-        private static void Send(MatchRoot root, int slots)
+        internal static void Send(MatchRoot root, int slots)
         {
             ComposedRound round = root.Composing;
 
@@ -747,7 +747,7 @@ namespace View.Editor
         /// sheet of the offer half off the screen. Every candidate is still one
         /// <see cref="ComposedRound.Allows"/> accepted.
         /// </remarks>
-        private static bool FirstLegalCell(ComposedRound round, UnitType tower, out int column, out int row)
+        internal static bool FirstLegalCell(ComposedRound round, UnitType tower, out int column, out int row)
         {
             HexMap map = round.Map;
 

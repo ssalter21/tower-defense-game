@@ -56,6 +56,7 @@ $declaration = @'
   6  client/Assets/Tests/EditMode/EffectMeshTests.cs
  13  client/Assets/Tests/EditMode/EntityViewPoolTests.cs
   6  client/Assets/Tests/EditMode/GeneratedProjectFilesTests.cs
+  6  client/Assets/Tests/EditMode/HexWheelChoicesTests.cs
  19  client/Assets/Tests/EditMode/ImportedArtTests.cs
   4  client/Assets/Tests/EditMode/MatchContentTests.cs
   4  client/Assets/Tests/EditMode/RoadTilingMeshTests.cs
