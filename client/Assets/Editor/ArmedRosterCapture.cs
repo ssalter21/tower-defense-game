@@ -516,7 +516,7 @@ namespace View.Editor
         /// The live roster passes a quarter, which is mid-stride and where a
         /// carried shield stops being edge-on to everything; it has been that
         /// since the tool was written and the committed measurements in
-        /// <c>Tests.Fixtures.ChosenArt</c> were taken in that pose, so moving it
+        /// <c>MatchSceneBuilder</c> were taken in that pose, so moving it
         /// would silently invalidate them. A candidate passes
         /// <see cref="ClipPhase"/>, because a candidate's clip is often not a
         /// walk at all — it is whatever pose the proposal is asking about — and

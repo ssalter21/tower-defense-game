@@ -630,8 +630,8 @@ namespace View.Editor
         /// <b>Size says which side a row is on and nothing else.</b> Towers
         /// draw at 1 and every creep at a half; no rung of a line is drawn
         /// bigger than the rung below it. The numbers are
-        /// <see cref="MatchArt"/>'s, so the two tables that carry these rows
-        /// cannot disagree about what a half is.
+        /// <see cref="MatchArt"/>'s, so this table cannot disagree with it
+        /// about what a half is.
         /// </para>
         /// <para>
         /// <b>A tier is told apart by colour, by a prop or by a second
@@ -1718,11 +1718,10 @@ namespace View.Editor
         /// For an editor tool that draws a match without reading the generated
         /// scene — the frame capture, which has to work on a checkout whose
         /// scene has not been rebuilt yet, and which would otherwise be a third
-        /// transcription of these paths. The <i>tests</i> deliberately keep
-        /// their own list, in <c>Tests.Fixtures.ChosenArt</c>: a fixture that
-        /// took its art from this class could not catch this class choosing the
-        /// wrong model, because it would be asserting that the choice matched
-        /// itself.
+        /// transcription of these paths. The tests take their art from here
+        /// too, so nothing catches this class choosing the wrong model: that
+        /// cross-check was traded for one less hand-kept list on 12 October
+        /// 2026.
         /// </remarks>
         public static MatchArt Art()
         {

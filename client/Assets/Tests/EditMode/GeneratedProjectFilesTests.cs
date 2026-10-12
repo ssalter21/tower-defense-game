@@ -73,7 +73,7 @@ namespace Tests.EditMode
         /// <c>Resources/MatchArt.asset</c> is what the play-mode suite reads
         /// when there is no editor to ask — a player, where
         /// <c>AssetDatabase</c> does not exist. It is generated from
-        /// <see cref="ChosenArt"/> by <c>tools/build-test-assets.ps1</c> and
+        /// <see cref="MatchSceneBuilder.Art"/> by <c>tools/build-test-assets.ps1</c> and
         /// committed, so like every other generated file here it can drift from
         /// its source between somebody changing one and remembering to run the
         /// other. This is what replaces remembering.
@@ -94,39 +94,39 @@ namespace Tests.EditMode
                 "No manifest at " + GeneratedTestAssets.ManifestPath + ". Run tools/build-test-assets.ps1.");
 
             MatchArt generated = asset.Art;
-            MatchArt chosen = ChosenArt.Load();
+            MatchArt built = MatchSceneBuilder.Art();
 
-            void Same(Object inManifest, Object inChosenArt, string field) =>
-                Assert.That(inManifest, Is.SameAs(inChosenArt),
+            void Same(Object inManifest, Object inBuilder, string field) =>
+                Assert.That(inManifest, Is.SameAs(inBuilder),
                     GeneratedTestAssets.ManifestPath + " names a different " + field
-                    + " than ChosenArt does. Run tools/build-test-assets.ps1 and commit what it writes.");
+                    + " than the builder does. Run tools/build-test-assets.ps1 and commit what it writes.");
 
             // Is.SameAs does not hold for two nulls, and two nulls are exactly
             // what an empty hand or a creep's absent clips look like on both
             // sides. Absent-on-one-side-only is still a failure.
-            void SameOrBothEmpty(Object inManifest, Object inChosenArt, string field)
+            void SameOrBothEmpty(Object inManifest, Object inBuilder, string field)
             {
-                if (inManifest == null && inChosenArt == null)
+                if (inManifest == null && inBuilder == null)
                 {
                     return;
                 }
 
-                Same(inManifest, inChosenArt, field);
+                Same(inManifest, inBuilder, field);
             }
 
-            void SameTilt(Quaternion inManifest, Quaternion inChosenArt, string field) =>
-                Assert.That(Quaternion.Angle(inManifest, inChosenArt), Is.LessThan(0.01f),
+            void SameTilt(Quaternion inManifest, Quaternion inBuilder, string field) =>
+                Assert.That(Quaternion.Angle(inManifest, inBuilder), Is.LessThan(0.01f),
                     GeneratedTestAssets.ManifestPath + " turns the " + field
-                    + " differently than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + " differently than the builder does. Run tools/build-test-assets.ps1 "
                     + "and commit what it writes.");
 
             Assert.That(
                 generated.Units.Select(u => u.UnitId),
-                Is.EqualTo(chosen.Units.Select(u => u.UnitId)),
-                GeneratedTestAssets.ManifestPath + " covers different units than ChosenArt does. "
+                Is.EqualTo(built.Units.Select(u => u.UnitId)),
+                GeneratedTestAssets.ManifestPath + " covers different units than the builder does. "
                 + "Run tools/build-test-assets.ps1 and commit what it writes.");
 
-            foreach (UnitArt unit in chosen.Units)
+            foreach (UnitArt unit in built.Units)
             {
                 UnitArt made = generated.ArtFor(unit.UnitId);
 
@@ -134,7 +134,7 @@ namespace Tests.EditMode
 
                 Assert.That(made.Scale, Is.EqualTo(unit.Scale),
                     GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
-                    + " at a different size than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + " at a different size than the builder does. Run tools/build-test-assets.ps1 "
                     + "and commit what it writes.");
 
                 // What a unit holds and the clips it holds it with are per unit
@@ -144,9 +144,9 @@ namespace Tests.EditMode
                 // null, and two nulls agree.
                 // Tilt, and this is the field that proves the comparison has to
                 // be exhaustive rather than representative. The staffs' quarter
-                // turn went into ChosenArt and into the builder on 14 August
-                // 2026 and not into the manifest, and this test stayed green
-                // over a manifest that disagreed with its own source -- so the
+                // turn went into the builder on 14 August 2026 and not into
+                // the manifest, and this test stayed green over a manifest
+                // that disagreed with its own source -- so the
                 // player path, which is the manifest, went on drawing both
                 // staffs flat while every editor path drew them upright.
                 //
@@ -161,12 +161,12 @@ namespace Tests.EditMode
                 // still firing every tower from a height above its root.
                 Assert.That(made.EffectAnchor.TransformName, Is.EqualTo(unit.EffectAnchor.TransformName),
                     GeneratedTestAssets.ManifestPath + " anchors unit " + unit.UnitId
-                    + "'s effects somewhere else than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "'s effects somewhere else than the builder does. Run tools/build-test-assets.ps1 "
                     + "and commit what it writes.");
 
                 Assert.That(made.EffectAnchor.Tip, Is.EqualTo(unit.EffectAnchor.Tip),
                     GeneratedTestAssets.ManifestPath + " takes unit " + unit.UnitId
-                    + "'s anchor from a different end of the same thing than ChosenArt does. "
+                    + "'s anchor from a different end of the same thing than the builder does. "
                     + "Run tools/build-test-assets.ps1 and commit what it writes.");
 
                 SameOrBothEmpty(made.RightHand, unit.RightHand, "right hand for unit " + unit.UnitId);
@@ -187,12 +187,12 @@ namespace Tests.EditMode
 
                 Assert.That(made.Beside.Scale, Is.EqualTo(unit.Beside.Scale),
                     GeneratedTestAssets.ManifestPath + " draws what stands beside unit " + unit.UnitId
-                    + " at a different size than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + " at a different size than the builder does. Run tools/build-test-assets.ps1 "
                     + "and commit what it writes.");
 
                 Assert.That(made.Beside.Offset, Is.EqualTo(unit.Beside.Offset),
                     GeneratedTestAssets.ManifestPath + " stands what is beside unit " + unit.UnitId
-                    + " somewhere else than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + " somewhere else than the builder does. Run tools/build-test-assets.ps1 "
                     + "and commit what it writes.");
                 SameOrBothEmpty(made.IdleClip, unit.IdleClip, "idle clip for unit " + unit.UnitId);
                 SameOrBothEmpty(made.WindupClip, unit.WindupClip, "windup clip for unit " + unit.UnitId);
@@ -215,17 +215,17 @@ namespace Tests.EditMode
                 // player, and as their own signatures everywhere else.
                 Assert.That(made.Signature.Bubble, Is.EqualTo(unit.Signature.Bubble),
                     GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
-                    + "'s bubble as something else than ChosenArt does. Run "
+                    + "'s bubble as something else than the builder does. Run "
                     + "tools/build-test-assets.ps1 and commit what it writes.");
 
                 Assert.That(made.Signature.Shot, Is.EqualTo(unit.Signature.Shot),
                     GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
-                    + "'s shot as something else than ChosenArt does. Run "
+                    + "'s shot as something else than the builder does. Run "
                     + "tools/build-test-assets.ps1 and commit what it writes.");
             }
 
-            Same(generated.CreepWalkClip, chosen.CreepWalkClip, nameof(chosen.CreepWalkClip));
-            Same(generated.CreepDeathClip, chosen.CreepDeathClip, nameof(chosen.CreepDeathClip));
+            Same(generated.CreepWalkClip, built.CreepWalkClip, nameof(built.CreepWalkClip));
+            Same(generated.CreepDeathClip, built.CreepDeathClip, nameof(built.CreepDeathClip));
         }
 
         /// <summary>

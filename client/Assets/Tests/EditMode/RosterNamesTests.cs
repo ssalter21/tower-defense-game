@@ -15,9 +15,8 @@ namespace Tests.EditMode
     /// <c>docs/roster.md</c>'s index table, copied by hand, so that a change to
     /// the derivation in <see cref="RosterNames"/> is caught against what the
     /// design document says rather than against a second run of the same
-    /// algorithm. That is the same shape as <c>Tests.Fixtures.ChosenArt</c>
-    /// against the scene builder: two lists that must agree, and a disagreement
-    /// that is a failure rather than a coincidence.
+    /// algorithm: two lists that must agree, and a disagreement that is a
+    /// failure rather than a coincidence.
     /// </para>
     /// <para>
     /// It also pins what the derivation is <i>for</i>. Naming units is not an

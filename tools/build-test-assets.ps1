@@ -7,7 +7,7 @@
     not exist anywhere else:
 
       Assets/Resources/MatchArt.asset   the models and clips, resolved
-                                        from Tests.Fixtures.ChosenArt's paths,
+                                        from MatchSceneBuilder.Art(),
                                         because AssetDatabase is editor-only
 
       Assets/Resources/TestClips/*.anim the sampling tests'' analytic oracle,
