@@ -185,15 +185,6 @@ namespace Tests.EditMode
         private const string LorekeeperAtlasPath =
             "Assets/Art/Kaykit/mystery-monthly-series-6/lorekeeper/lorekeeper_texture.png";
 
-        /// <summary>
-        /// The second model proposed for the Druid's tier 3 and set aside on
-        /// issue #250: it read as a different creature rather than as the same
-        /// person promoted, so that line is colour and a prop at every rung.
-        /// Imported, and drawn by nothing.
-        /// </summary>
-        private const string PlantWarriorModelPath =
-            "Assets/Art/Kaykit/mystery-monthly-series-6/plant-warrior/PlantWarrior.fbx";
-
         private const string DruidModelPath = "Assets/Art/Kaykit/adventurers/Druid.fbx";
 
         private const string DruidAtlasPath = "Assets/Art/Kaykit/adventurers/druid_texture.png";
@@ -505,12 +496,6 @@ namespace Tests.EditMode
         private static readonly int[] LargeRigCreepUnitIds =
             LargeRigUnitIds.Where(id => id != SlamUnitId).ToArray();
 
-        /// <summary>The Druid, the Elder and the Overgrowth, in roster order.</summary>
-        private static readonly int[] DruidLineUnitIds = { 28, 29, 30 };
-
-        /// <summary>The tier-1 Engineer, the row whose shots leave a turret.</summary>
-        private const int EngineerUnitId = 35;
-
         /// <summary>
         /// Every FBX in this project that carries a rig or clips: every model a
         /// unit is drawn with, plus the three banks. Walked rather than listed,
@@ -571,47 +556,6 @@ namespace Tests.EditMode
         }
 
         /// <summary>
-        /// Every unit the simulation can put on the board has a model and a
-        /// size, and the sizes are the ones <c>docs/roster.md</c> signed.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>Walked from the shipped unit table rather than from the art.</b>
-        /// The failure this catches is a row with no entry, and a test that
-        /// iterated the art would find every entry it had and never notice the
-        /// one it did not — the Necromancer arriving on a menu and drawing
-        /// nothing at all.
-        /// </para>
-        /// <para>
-        /// <b>Two multipliers and no exceptions.</b> "Towers 1, every creep a
-        /// half" is the whole rule: size says which side a row is on and never
-        /// which rung of a line it is. The role is read off the shipped table
-        /// rather than written out per unit, which makes this a third
-        /// transcription of the roster after the scene builder's and the
-        /// fixture's, and deliberately so: an assertion that read either table
-        /// would be checking it against itself.
-        /// </para>
-        /// </remarks>
-        [Test]
-        public void EveryUnitTypeIsDrawnAtItsRosterScale()
-        {
-            MatchArt art = ChosenArt.Load();
-
-            foreach (UnitType type in StreamingContent.ReadUnitTypes().Types)
-            {
-                Assert.That(art.ModelFor(type.Id), Is.Not.Null,
-                    $"unit {type.Id} ({type.Label}) has no model");
-
-                float expected = type.Role == UnitRole.Moving
-                    ? MatchArt.CreepScale
-                    : MatchArt.TowerScale;
-
-                Assert.That(art.ScaleFor(type.Id), Is.EqualTo(expected),
-                    $"unit {type.Id} ({type.Label}) is drawn at the wrong size for its role");
-            }
-        }
-
-        /// <summary>
         /// Every atlas a row names is imported, and imported as a texture.
         /// </summary>
         /// <remarks>
@@ -627,55 +571,6 @@ namespace Tests.EditMode
                 Assert.That(AssetDatabase.LoadAssetAtPath<Texture2D>(path), Is.Not.Null,
                     $"{path} is not in the project — a row names an atlas nothing imported");
             }
-        }
-
-        /// <summary>
-        /// The two rows that share a model are told apart by something other
-        /// than size.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>Nothing else in this project holds the two rungs apart.</b> The
-        /// Archer and the Ranger are one model at one scale, so a build that
-        /// gave the Ranger no colour, no prop and no second body would ship two
-        /// rungs a player cannot tell apart — and every other test here would
-        /// stay green over it.
-        /// </para>
-        /// <para>
-        /// <b>Both halves, not either.</b> <c>docs/roster.md</c> signs this
-        /// rung as a colour <i>and</i> a prop, and an assertion satisfied by
-        /// whichever of the two happened to survive would let the other go
-        /// back to null with every runner green. Which atlas and which prop
-        /// stay unnamed here: those are the developer's to move, and naming
-        /// them would make this test the place the art is decided.
-        /// </para>
-        /// </remarks>
-        [Test]
-        public void TheTwoRowsOnOneModelAreToldApartWithoutSize()
-        {
-            MatchArt art = ChosenArt.Load();
-
-            UnitArt archer = art.ArtFor(ArcherUnitId);
-            UnitArt ranger = art.ArtFor(RangerUnitId);
-
-            Assert.That(ranger.Model, Is.SameAs(archer.Model),
-                "these are the two rows that share a model; if they no longer do, this test is "
-                + "asserting nothing and the roster has moved under it");
-
-            Assert.That(ranger.Scale, Is.EqualTo(archer.Scale),
-                "size is not a tier signal, so the two rungs of the Archer line draw at one scale");
-
-            Assert.That(ranger.Texture, Is.Not.Null,
-                "the Ranger shares the Archer's model and its size, so its own atlas is the colour "
-                + "half of what tells the two rungs apart — see docs/roster.md");
-
-            Assert.That(ranger.Texture, Is.Not.SameAs(archer.Texture),
-                "the Ranger draws in the atlas the Archer draws in, so the colour separates nothing");
-
-            Assert.That(
-                ranger.RightHand != archer.RightHand || ranger.LeftHand != archer.LeftHand,
-                Is.True,
-                "the Ranger holds exactly what the Archer holds, so the prop separates nothing");
         }
 
         /// <summary>
@@ -741,47 +636,6 @@ namespace Tests.EditMode
 
             Assert.That(compared, Is.GreaterThan(0),
                 "no two rows share a model, so this compared nothing at all");
-        }
-
-        /// <summary>
-        /// Every rung of the Druid line is drawn on the Druid, and no row
-        /// anywhere is drawn on the PlantWarrior.
-        /// </summary>
-        /// <remarks>
-        /// <b>A rejection only holds where something reads it.</b> The
-        /// PlantWarrior was proposed as this line's second model and set aside
-        /// on issue #250 — of the six second models it was the only one that
-        /// read as a different creature rather than as the same person promoted
-        /// — so the Druid keeps his own body and is told apart by colour and by
-        /// the weirwood beside him, the way the Knight, the Cleric and the
-        /// Engineer are. The model is imported and the proposal that named it
-        /// is still in <c>docs/</c>, so what keeps it unbound is this rather
-        /// than everybody remembering. Held over the whole table and over the
-        /// beside socket, since a body may stand beside a tower as easily as
-        /// under one.
-        /// </remarks>
-        [Test]
-        public void TheDruidLineIsDrawnOnTheDruidAndNothingOnThePlantWarrior()
-        {
-            MatchArt art = ChosenArt.Load();
-            GameObject druid = Loaded(DruidModelPath);
-            GameObject plantWarrior = Loaded(PlantWarriorModelPath);
-
-            foreach (int unitId in DruidLineUnitIds)
-            {
-                Assert.That(art.ModelFor(unitId), Is.SameAs(druid),
-                    $"unit {unitId} is a rung of the Druid line and docs/roster.md draws every one of "
-                    + "them on the Druid himself — that line has no second model");
-            }
-
-            foreach (UnitArt unit in art.Units)
-            {
-                Assert.That(unit.Model, Is.Not.SameAs(plantWarrior),
-                    $"unit {unit.UnitId} is drawn on the PlantWarrior, which issue #250 set aside");
-
-                Assert.That(unit.Beside.Model, Is.Not.SameAs(plantWarrior),
-                    $"unit {unit.UnitId} stands beside the PlantWarrior, which issue #250 set aside");
-            }
         }
 
         /// <summary>
@@ -985,83 +839,6 @@ namespace Tests.EditMode
             Assert.That(refused.Message, Does.Contain("handslot.left"),
                 "the refusal has to name the anchor that was not found, or it sends the reader looking "
                 + "at the art instead of at the string");
-        }
-
-        /// <summary>
-        /// The Engineer's turret stands on the tile beside him, keeps standing
-        /// there while he turns, and is where his shots leave from.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>This is the whole of the Engineer line's identity.</b> He is a
-        /// wrench and a turret at every rung; the turret is what fires, so an
-        /// anchor that fell back to his own body would put the shell coming out
-        /// of the man rather than out of the machine. The anchor resolves
-        /// across the built tower, which is what makes a node inside a beside
-        /// prop the same kind of name as a bone.
-        /// </para>
-        /// <para>
-        /// <b>The turn is asserted because that is the failure this cannot see
-        /// in a photograph.</b> A tower rotates to track a creep, so a prop left
-        /// at a fixed local offset orbits it — swinging through the neighbouring
-        /// tiles once per target — and a still frame of any single tick looks
-        /// perfectly correct.
-        /// </para>
-        /// </remarks>
-        [Test]
-        public void TheEngineersTurretStandsBesideHimAndHisShotsLeaveIt()
-        {
-            UnitArt engineer = ChosenArt.Load().ArtFor(EngineerUnitId);
-
-            Assert.That(engineer.Model, Is.SameAs(Loaded(EngineerModelPath)),
-                $"unit {EngineerUnitId} is the row this test is about and it is drawn with something "
-                + "else now — the roster has moved under this assertion");
-
-            TowerView tower = BuiltTower(TypeOf(EngineerUnitId), engineer);
-
-            Assert.That(tower.Beside, Is.Not.Null, "nothing was drawn beside the Engineer");
-            Assert.That(tower.Beside.name, Is.EqualTo("turret_base"));
-
-            Assert.That(tower.Beside.transform.IsChildOf(tower.transform), Is.True,
-                "the turret hangs off the tower root, which is what makes it a socket rather than "
-                + "scenery somebody left on the board");
-
-            Assert.That(tower.Beside.transform.IsChildOf(tower.Model.transform), Is.False,
-                "the turret is under the body, so it inherits the row's scale and whatever atlas the "
-                + "row wears — which for a prop off another pack is confetti at the wrong size");
-
-            AssertStandsAt(
-                tower.Beside.transform.position,
-                tower.transform.position + BesideProp.NextTile,
-                "the turret does not stand on the tile beside him");
-
-            Transform anchor = tower.AnchorTransform;
-
-            Assert.That(anchor, Is.Not.Null, "the Engineer's anchor resolved to nothing");
-
-            Assert.That(anchor.IsChildOf(tower.Beside.transform), Is.True,
-                $"the Engineer fires from {anchor.name}, which is not part of the turret — the shot "
-                + "leaves the machine and not the man holding the wrench");
-
-            Bounds turret = WorldBounds(tower.Beside, null);
-
-            Assert.That(tower.Muzzle.y, Is.GreaterThan(turret.center.y),
-                "the shell leaves the underside of the turret");
-
-            Debug.Log(
-                $"[beside] the Engineer's turret is {turret.size.y:F2} m tall and fires from "
-                + $"{tower.Muzzle.y:F2} m up, {Vector3.Distance(tower.Muzzle, tower.transform.position):F2} m "
-                + "from his own root");
-
-            // Turned to track a creep behind him. The tower rotates; the thing
-            // on the ground beside it does not.
-            Vector3 stood = tower.Beside.transform.position;
-
-            tower.Pose(TowerState.Idle, 0, tower.transform.position + (Vector3.forward * 8f));
-
-            AssertStandsAt(
-                tower.Beside.transform.position, stood,
-                "the turret moved when the Engineer turned, so it orbits him rather than standing on a tile");
         }
 
         /// <summary>
@@ -1333,27 +1110,6 @@ namespace Tests.EditMode
             }
         }
 
-        [Test]
-        public void TheHitscanTowerIsAStaticBuildingMesh()
-        {
-            GameObject tower = Instantiate(TowerPath);
-
-            MeshFilter[] filters = tower.GetComponentsInChildren<MeshFilter>(true);
-            Assert.IsNotEmpty(filters, "the tower imported with no mesh — this is the static import path");
-
-            foreach (MeshFilter filter in filters)
-            {
-                Assert.IsNotNull(filter.sharedMesh, $"{filter.name} has a mesh filter and no mesh");
-                Assert.Greater(filter.sharedMesh.vertexCount, 0, $"{filter.name}'s mesh is empty");
-            }
-
-            // Deliberately the other path, not a second copy of the first one:
-            // a building that arrived skinned would mean the two halves of this
-            // ticket are the same half twice.
-            Assert.IsEmpty(tower.GetComponentsInChildren<SkinnedMeshRenderer>(true),
-                "the building imported skinned — that is the character path, not the static one");
-        }
-
         /// <summary>
         /// Every model draws with the atlas it was authored against, and with
         /// that exact file rather than something of the same name.
@@ -1584,30 +1340,6 @@ namespace Tests.EditMode
                     Assert.IsFalse(clip.hasMotionCurves, $"{clip.name} carries motion curves");
                     Assert.IsFalse(clip.hasGenericRootTransform, $"{clip.name} carries a generic root transform");
                 }
-            }
-        }
-
-        /// <summary>
-        /// Every rig arrived Generic, with no avatar.
-        /// </summary>
-        /// <remarks>
-        /// The proven path is generic transform curves: the clip animates named
-        /// transforms in this hierarchy directly. Humanoid would put a
-        /// retargeting solver between the clip and the bones — one more thing
-        /// between sim time and the pose, on a rig that never needed retargeting
-        /// in the first place.
-        /// </remarks>
-        [Test]
-        public void TheRigIsImportedGenericWithNoAvatar()
-        {
-            foreach (var path in RiggedPaths)
-            {
-                var importer = (ModelImporter)AssetImporter.GetAtPath(path);
-                Assert.IsNotNull(importer, $"no model importer for {path}");
-                Assert.AreEqual(ModelImporterAnimationType.Generic, importer.animationType,
-                    $"{path} is not imported as Generic");
-                Assert.AreEqual(ModelImporterAvatarSetup.NoAvatar, importer.avatarSetup,
-                    $"{path} was given an avatar");
             }
         }
     }

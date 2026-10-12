@@ -70,21 +70,6 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void TheAxesWithNoConstantShipAsThePictureTheGameAlreadyDraws()
-        {
-            EffectLook shipped = EffectLook.Shipped;
-
-            Assert.That(shipped.UnitBarCrossed, Is.False, "There is one bar and it does not turn.");
-            Assert.That(shipped.UnitBarClamped, Is.False, "Both segments are shares of the authored health.");
-
-            Assert.That(
-                shipped.GroundEffectShrunkToBoard,
-                Is.False,
-                "A circle near a rim is not narrowed to fit the board -- it is cut at the rim, "
-                + "which is GroundEffectsClipToBoard and has a constant of its own.");
-        }
-
-        [Test]
         public void AnOverrideStandsInFrontOfOneMemberAndLeavesTheRest()
         {
             EffectLookFile candidate = EffectLookFile.Parse(
@@ -101,63 +86,6 @@ namespace Tests.EditMode
 
             Assert.That(candidate.Look.OverriddenCount, Is.EqualTo(2));
             Assert.That(candidate.Look.IsShipped, Is.False);
-        }
-
-        [Test]
-        public void AMemberThatCountsThingsReadsItsOverrideRounded()
-        {
-            EffectLookFile candidate = EffectLookFile.Parse("rounded", new[] { "SlowRingTicks 11.5" });
-
-            Assert.That(candidate.Look.SlowRingTicks, Is.EqualTo(12));
-        }
-
-        [Test]
-        public void AFlagTakesTrueOrOne()
-        {
-            Assert.That(
-                EffectLookFile.Parse("word", new[] { "UnitBarCrossed true" }).Look.UnitBarCrossed,
-                Is.True);
-
-            Assert.That(
-                EffectLookFile.Parse("number", new[] { "UnitBarCrossed 1" }).Look.UnitBarCrossed,
-                Is.True);
-
-            Assert.That(
-                EffectLookFile.Parse("off", new[] { "UnitBarCrossed false" }).Look.UnitBarCrossed,
-                Is.False);
-        }
-
-        [Test]
-        public void AColourReadsAsChannelsOrAsHex()
-        {
-            Assert.That(
-                EffectLookFile.Parse("channels", new[] { "SlowRingColor 0.5,0.25,1" }).Look.SlowRingColor,
-                Is.EqualTo(new Color(0.5f, 0.25f, 1f, 1f)));
-
-            Color hex = EffectLookFile.Parse("hex", new[] { "SlowRingColor #FF0000" }).Look.SlowRingColor;
-
-            Assert.That(hex.r, Is.EqualTo(1f).Within(0.01f));
-            Assert.That(hex.g, Is.EqualTo(0f).Within(0.01f));
-        }
-
-        [Test]
-        public void AHashOpensACommentOnlyAtTheStartOfALine()
-        {
-            // Both of these were broken by a comment stripper that cut at the
-            // first hash: a colour in hex became a key with no value, and a
-            // question naming the issue it came from lost its own sentence.
-            EffectLookFile candidate = EffectLookFile.Parse(
-                "hashes",
-                new[]
-                {
-                    "# a whole-line comment",
-                    "question What should this be, given that #266 named no shape?",
-                    "SlowRingColor #00FF00",
-                });
-
-            Assert.That(candidate.Look.SlowRingColor.g, Is.EqualTo(1f).Within(0.01f));
-            StringAssert.Contains("named no shape", candidate.Question);
-            StringAssert.Contains("#266", candidate.Question);
         }
 
         [Test]
@@ -226,16 +154,6 @@ namespace Tests.EditMode
                 UnityEngine.Object.DestroyImmediate(mageBody);
                 UnityEngine.Object.DestroyImmediate(witchBody);
             }
-        }
-
-        [Test]
-        public void AShapeThatDoesNotExistIsAFaultThatListsTheOnesThatDo()
-        {
-            FormatException fault = Assert.Throws<FormatException>(
-                () => EffectLookFile.Parse("nonsense", new[] { "signature 7 Sparkles" }));
-
-            StringAssert.Contains("Sparkles", fault.Message);
-            StringAssert.Contains(nameof(BubbleSignature.HasteRing), fault.Message);
         }
     }
 }

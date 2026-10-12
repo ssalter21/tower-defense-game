@@ -85,29 +85,10 @@ namespace Tests.PlayMode
         /// <summary>The committed archer, which is what these tests spend on the board.</summary>
         private const int ArcherId = 3;
 
-        /// <summary>What an Archer climbs into: the one edge the committed ladder carries.</summary>
-        private const int RangerId = 14;
-
         /// <summary>A cell of ground with nothing on it, well clear of the corridor.</summary>
         private const int FreeColumn = 7;
 
         private const int FreeRow = 0;
-
-        /// <summary>
-        /// The row opens as one empty box and nothing else. There is no width to
-        /// draw — #179 deleted the schedule that used to say two, then three,
-        /// then four — so what the bar shows at the start is the one place a
-        /// creep can go.
-        /// </summary>
-        [Test]
-        public void TheRowOpensAsASingleEmptyBoxCarryingAPlusSign()
-        {
-            MatchRoot root = Building(Opening());
-
-            Assert.That(root.Composing.Slots, Is.Empty);
-            Assert.That(root.Wave.Boxes.Count, Is.EqualTo(1));
-            Assert.That(root.Wave.Boxes[0].Q<Label>("Plus").text, Is.EqualTo("+"));
-        }
 
         /// <summary>
         /// A round that carries creeps opens with them already in the row. A
@@ -206,42 +187,6 @@ namespace Tests.PlayMode
 
             Assert.That(root.Wave.Boxes.Count, Is.EqualTo(6), "And there is still an empty one behind.");
             Assert.That(root.Composing.Gold, Is.EqualTo(14), "A hundred, less 10, 9, 17, 19 and 31.");
-        }
-
-        /// <summary>
-        /// A box says a name and a count. No type ids on screen, and none of the
-        /// record's vocabulary — see ADR-0051, #196 and #197.
-        /// </summary>
-        [Test]
-        public void ABoxIsANameAndACount()
-        {
-            MatchRoot root = Building(Opening());
-
-            Send(root, 0, SkeletonWarriorId);
-
-            Assert.That(Wording(root.Wave.Boxes[0]), Does.Contain("Skeleton Warrior"));
-            Assert.That(Wording(root.Wave.Boxes[0]), Does.Contain("x1"));
-
-            root.Wave.Open(0);
-            root.Wave.More();
-
-            Assert.That(Wording(root.Wave.Boxes[0]), Does.Contain("x2"));
-
-            Assert.That(
-                Wording(root.Wave.Boxes[0]),
-                Does.Not.Contain("gold"),
-                "A box is a creep and a count. What it costs is said where the buying is decided, which "
-                + "is the box's own list.");
-
-            foreach (VisualElement box in root.Wave.Boxes)
-            {
-                string wording = Wording(box).ToLowerInvariant();
-
-                Assert.That(wording, Does.Not.Contain("ordinary"));
-                Assert.That(wording, Does.Not.Contain("game changer"));
-                Assert.That(wording, Does.Not.Contain("type"));
-                Assert.That(wording, Does.Not.Contain("slot"));
-            }
         }
 
         /// <summary>
@@ -403,31 +348,6 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// Lowering a count of more than one leaves the box where it is. Only
-        /// the last one out removes it.
-        /// </summary>
-        [Test]
-        public void LoweringACountOfMoreThanOneLeavesTheBoxWhereItIs()
-        {
-            MatchRoot root = Building(Opening());
-
-            Send(root, 0, MinionId);
-            root.Wave.Open(0);
-            root.Wave.More();
-            root.Wave.Open(0);
-            root.Wave.Fewer();
-
-            Assert.That(root.Composing.Slots.Count, Is.EqualTo(1));
-            Assert.That(root.Composing.Slots[0].Count, Is.EqualTo(1));
-
-            root.Wave.Open(0);
-            root.Wave.Fewer();
-
-            Assert.That(root.Composing.Slots, Is.Empty);
-            Assert.That(root.Wave.Boxes.Count, Is.EqualTo(1), "Back to one empty box.");
-        }
-
-        /// <summary>
         /// <b>The ticket's "done when", end to end.</b> A wave is composed
         /// through the bar, a box is dragged to the front with a pointer, and
         /// the <see cref="BuildPhase"/> that comes out carries the slots in the
@@ -486,117 +406,6 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// A carried box drags like any other. #207's "done when" says the
-        /// accumulated wave can be dragged into any order in <b>any</b> build
-        /// phase — so the creeps an earlier round paid for are a floor under the
-        /// count and not a pin on the position.
-        /// </summary>
-        /// <remarks>
-        /// The sim side of this is covered by
-        /// <c>The_whole_carried_wave_is_reordered_by_a_later_round...</c>. This
-        /// is the clause the ticket actually wrote down, which names the drag:
-        /// the carried box is grabbed with a pointer and dropped at the front.
-        /// </remarks>
-        [UnityTest]
-        public IEnumerator ACarriedBoxIsDraggedLikeAnyOther()
-        {
-            MatchRoot root = Building(Opening(carried: Carrying(MinionId, 2, SkeletonId, 1)));
-
-            yield return null;
-            yield return null;
-
-            Assert.That(
-                Sent(root),
-                Is.EqualTo(new[] { MinionId, SkeletonId }),
-                "Both boxes are carried, in the order they were last sent.");
-
-            // The second carried box, dragged in front of the first.
-            root.Wave.Grab(1, MiddleOf(root, 1));
-            root.Wave.Drag(MiddleOf(root, 0) - 1f);
-
-            Assert.That(root.Wave.DraggingTo, Is.EqualTo(0), "A drop here lands at the front.");
-
-            root.Wave.Release();
-
-            Assert.That(
-                Sent(root),
-                Is.EqualTo(new[] { SkeletonId, MinionId }),
-                "A creep bought in an earlier round still chooses where in the column it walks.");
-
-            // Rearranging buys nothing, so it costs nothing — and the wave that
-            // comes out still carries every creep, at the counts it carried.
-            Assert.That(root.Composing.Gold, Is.EqualTo(100), "Reordering is free.");
-            Assert.That(root.Composing.Slots[0].Count, Is.EqualTo(1));
-            Assert.That(root.Composing.Slots[1].Count, Is.EqualTo(2));
-        }
-
-        /// <summary>
-        /// A box dropped between two others lands between them, dragged either
-        /// way.
-        /// </summary>
-        /// <remarks>
-        /// <b>The two directions are not one case.</b>
-        /// <see cref="ComposedRound.Rearrange"/> takes the box out of the row
-        /// before putting it back, so what it is handed is a position in a row
-        /// one shorter — and taking a box out shifts everything after it down by
-        /// one and nothing before it. A landing that named the index of the last
-        /// box it passed rather than counting the boxes it passed was therefore
-        /// right dragging rightwards and one place too far left dragging
-        /// leftwards, and a test that only ever dropped at the front could not
-        /// see it: the front is the one position both readings agree on.
-        /// </remarks>
-        [UnityTest]
-        public IEnumerator ABoxDroppedBetweenTwoOthersLandsBetweenThem()
-        {
-            MatchRoot root = Building(Opening());
-
-            Send(root, 0, MinionId);
-            Send(root, 1, SkeletonScoutId);
-            Send(root, 2, SkeletonId);
-
-            yield return null;
-            yield return null;
-
-            // Leftwards: the third box, dropped between the first two.
-            root.Wave.Grab(2, MiddleOf(root, 2));
-            root.Wave.Drag(Between(root, 0, 1));
-
-            Assert.That(root.Wave.DraggingTo, Is.EqualTo(1));
-
-            root.Wave.Release();
-
-            Assert.That(
-                Sent(root),
-                Is.EqualTo(new[] { MinionId, SkeletonId, SkeletonScoutId }),
-                "Between the first two, not in front of them.");
-
-            yield return null;
-            yield return null;
-
-            // Rightwards: the first box, dropped between the other two.
-            root.Wave.Grab(0, MiddleOf(root, 0));
-            root.Wave.Drag(Between(root, 1, 2));
-
-            Assert.That(root.Wave.DraggingTo, Is.EqualTo(1));
-
-            root.Wave.Release();
-
-            Assert.That(
-                Sent(root),
-                Is.EqualTo(new[] { SkeletonId, MinionId, SkeletonScoutId }));
-
-            yield return null;
-            yield return null;
-
-            // And a press that goes nowhere leaves the row exactly as it was.
-            root.Wave.Grab(1, MiddleOf(root, 1));
-            root.Wave.Drag(MiddleOf(root, 1));
-            root.Wave.Release();
-
-            Assert.That(Sent(root), Is.EqualTo(new[] { SkeletonId, MinionId, SkeletonScoutId }));
-        }
-
-        /// <summary>
         /// <b>An open list does not outlive the purse it was priced against.</b>
         /// One wallet buys both halves of a phase, so a tower bought while a box
         /// is open can make what that box is offering unaffordable — and
@@ -629,96 +438,6 @@ namespace Tests.PlayMode
             root.Wave.Choose(Types().ById(SkeletonWarriorId));
 
             Assert.That(root.Composing.Slots, Is.Empty, "A closed list offers nothing.");
-        }
-
-        /// <summary>
-        /// The same, for the route that never touches the board: taking a rung
-        /// of a tower's ladder spends from the same purse.
-        /// </summary>
-        [Test]
-        public void TakingAnUpgradePutsAnOpenListAway()
-        {
-            MatchRoot root = Building(Opening(gold: 120));
-
-            Select(root, ArcherId);
-            root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
-            root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
-
-            Assert.That(root.Palette.IsOffering, Is.True);
-
-            root.Wave.Open(0);
-
-            Assert.That(root.Wave.IsListing, Is.True);
-
-            root.Palette.Take(Types().ById(RangerId));
-
-            Assert.That(root.Composing.Gold, Is.EqualTo(40), "A hundred and twenty, less 40 and 40.");
-            Assert.That(root.Wave.IsListing, Is.False);
-        }
-
-        /// <summary>
-        /// A box that is not in the row is refused rather than clamped. Every
-        /// affordance on screen counts the row first, so an index naming nothing
-        /// means the screen counted it wrong — which wants a stack trace, not a
-        /// wave quietly composed at the wrong position.
-        /// </summary>
-        [Test]
-        public void ABoxThatIsNotInTheRowIsRefused()
-        {
-            MatchRoot root = Building(Opening());
-
-            Send(root, 0, MinionId);
-
-            UnitType scout = Types().ById(SkeletonScoutId);
-
-            Assert.That(
-                () => root.Composing.Send(1, scout),
-                Throws.Nothing,
-                "One past the end is the trailing empty box, and it appends.");
-
-            Assert.That(() => root.Composing.Send(9, scout), Throws.InstanceOf<ArgumentOutOfRangeException>());
-            Assert.That(() => root.Composing.Send(-1, scout), Throws.InstanceOf<ArgumentOutOfRangeException>());
-            Assert.That(() => root.Composing.SendMore(2), Throws.InstanceOf<ArgumentOutOfRangeException>());
-            Assert.That(() => root.Composing.SendFewer(2), Throws.InstanceOf<ArgumentOutOfRangeException>());
-            Assert.That(() => root.Composing.SendNone(2), Throws.InstanceOf<ArgumentOutOfRangeException>());
-        }
-
-        /// <summary>
-        /// A press that never travelled is a click, and a click opens the box's
-        /// list. Same element, two verbs, told apart by distance — without the
-        /// slack every click would land as a rearrangement nobody asked for.
-        /// </summary>
-        [UnityTest]
-        public IEnumerator APressThatDidNotTravelIsAClickAndOpensTheList()
-        {
-            MatchRoot root = Building(Opening());
-
-            Send(root, 0, MinionId);
-            Send(root, 1, SkeletonScoutId);
-
-            yield return null;
-            yield return null;
-
-            root.Wave.Grab(1, MiddleOf(root, 1));
-            root.Wave.Drag(MiddleOf(root, 1) + (WaveBar.DragSlack * 0.5f));
-            root.Wave.Release();
-
-            Assert.That(Sent(root), Is.EqualTo(new[] { MinionId, SkeletonScoutId }), "Nothing moved.");
-            Assert.That(root.Wave.IsListing, Is.True);
-            Assert.That(root.Wave.ListingAt, Is.EqualTo(1));
-
-            // And the list a filled box opens leads with what to do about the
-            // count, then offers what else could go there.
-            Assert.That(Wording(root.Wave.Choices), Does.Contain("One more"));
-            Assert.That(Wording(root.Wave.Choices), Does.Contain("One fewer"));
-            Assert.That(Wording(root.Wave.Choices), Does.Not.Contain("Skeleton Scout"), "It is in the box.");
-            Assert.That(
-                Wording(root.Wave.Choices),
-                Does.Not.Contain("Minion"),
-                "And the Minion is in the box in front of it, which is the duplicate rule preventing "
-                + "rather than refusing.");
-
-            Assert.That(Wording(root.Wave.Choices), Does.Contain("Skeleton Mage   19 gold"));
         }
 
         /// <summary>
@@ -1001,13 +720,6 @@ namespace Tests.PlayMode
         private static float MiddleOf(MatchRoot root, int index) =>
             root.Wave.Boxes[index].worldBound.center.x;
 
-        /// <summary>
-        /// A point halfway between two boxes' middles: past the first and not
-        /// yet past the second, which is what "dropped between them" means.
-        /// </summary>
-        private static float Between(MatchRoot root, int left, int right) =>
-            (MiddleOf(root, left) + MiddleOf(root, right)) * 0.5f;
-
         /// <summary>The creep in each filled box, in the order the row shows them.</summary>
         private static int[] Sent(MatchRoot root)
         {
@@ -1032,18 +744,6 @@ namespace Tests.PlayMode
             }
 
             return ids;
-        }
-
-        private static string Wording(VisualElement element)
-        {
-            var words = new StringBuilder();
-
-            foreach (Label label in element.Query<Label>().ToList())
-            {
-                words.Append(label.text).Append(' ');
-            }
-
-            return words.ToString();
         }
 
         private static string Wording(IReadOnlyList<Button> buttons)

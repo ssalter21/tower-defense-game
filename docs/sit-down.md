@@ -124,7 +124,7 @@ instead of the snapshot distance — one argument at `MatchView.DrawCreeps` — 
 exactly these two red and **leaves all seventy other tests green**, which is also
 the measurement of what was missing: nothing else in any tier noticed the view
 being rewired to a clock. The component seam was already covered
-(`PlayablesSamplingTests`, `RealRigSamplingTests`, `PlayableHeadPoisonTests` —
+(`PlayablesSamplingTests`, `RealRigSamplingTests` —
 a clip told a time poses at that time, forwards or backwards, and never advances
 on its own). What was never covered was the wiring between the match and that
 clip, and the wiring is what rows 4 and 5 were looking at.
