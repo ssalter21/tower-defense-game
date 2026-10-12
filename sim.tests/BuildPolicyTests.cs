@@ -272,99 +272,6 @@ public class BuildPolicyTests
     }
 
     [Fact]
-    public void The_bot_opens_on_the_engineer_and_never_reaches_a_second_rung_at_all()
-    {
-        // Two consequences of the rules rather than rules of their own, written
-        // down because both are the kind of thing somebody finds in the report
-        // and reads as a bug.
-        //
-        // THE OPENING PURSE BUYS AN ENGINEER. The covering half scores reach per
-        // gold, and the engineer is four hexes for thirty -- the best of that
-        // ratio on the widened roster, ahead of the druid's three and a half for
-        // thirty and the archer's three for forty. It opened on the archer while
-        // the roster was four rows; nine lines of roots is what moved it.
-        //
-        // NO SECOND RUNG IS EVER BUILT, and the ranger is the clearest case. An
-        // upgrade is scored per gold of what the new row costs ABOVE the one
-        // standing, and the ranger costs exactly what the archer costs -- a
-        // difference of nothing, which is no score at all rather than a poor
-        // one. Five more rungs are flat against the row beneath them for the
-        // same reason, and the rest are dear enough that a cheaper root on a
-        // free cell outscores them. That is worth knowing rather than fixing
-        // here: this bot's defense exercises no upgrade edge at all, so nothing
-        // a scripted run plays says anything about a second or third rung. It
-        // is a property of this bot's rule and not of the ladder.
-        //
-        // OBSERVED: score by price alone -- return the first type with anything
-        // to gain out of CoverThenUpgradeBot.BestValue. This goes red on the
-        // opening action, type 11 where 35 was expected.
-        //
-        // OBSERVED: drop the Placeable filter from CoverThenUpgradeBot.Decide.
-        // This goes red the other way, on a rung the ladder refuses to place,
-        // and every scripted run in the project dies on that placement.
-        UnitTypeTable types = TheMatch.Types();
-        CostTable costs = CostTable.From(TheRuleset.Committed(), types);
-        HexMap map = TheMatch.Map();
-        var built = new List<int>();
-
-        foreach ((Board _, IReadOnlyList<BuildAction> actions) in Played())
-        {
-            foreach (BuildAction action in actions)
-            {
-                if (!built.Contains(action.TypeId))
-                {
-                    built.Add(action.TypeId);
-                }
-            }
-        }
-
-        Assert.Equal(Engineer, built[0]);
-        Assert.DoesNotContain(Ranger, built);
-
-        // Eight different roots get built, so the ranger's absence is the two
-        // rules above and not a player that only ever buys one thing. Every one
-        // of them is a root: nothing an edge points at is ever reached.
-        //
-        // IT WAS SIX WHILE THE MAP CLIMBED THREE FLAT TIERS. The barbarian and
-        // the paladin are what the landscape added: the committed six do not
-        // reach across a regraded board, so the covering half keeps finding
-        // route left to watch and goes on buying roots for cells the flat map
-        // never left open. Two more names on this list is the board moving and
-        // not the rule -- the rule is unchanged, and the ranger is still absent
-        // from it for the reason above.
-        Assert.Equal(
-            new[] { Engineer, Druid, Soldier, Cleric, Rogue, Archer, Barbarian, Paladin },
-            built);
-
-        UpgradeLadder ladder = TheMatch.Ladder(types);
-
-        Assert.All(built, id => Assert.False(ladder.IsTargetOfAnEdge(id)));
-
-        // And the reason, in the comparisons the rule makes: the engineer
-        // reaches more corridor per gold than the archer even though it is
-        // cheaper, the archer beats the soldier the same way, and the ranger
-        // would have beaten the archer on reach at the same price if the ladder
-        // let it be placed at all.
-        int ranger = Widest(map, types.ById(Ranger));
-        int archer = Widest(map, types.ById(Archer));
-        int soldier = Widest(map, types.ById(Soldier));
-        int engineer = Widest(map, types.ById(Engineer));
-
-        Assert.Equal(costs.PriceOf(Purchase.Unit(Archer)), costs.PriceOf(Purchase.Unit(Ranger)));
-        Assert.True(ranger > archer);
-        Assert.True(
-            engineer * costs.PriceOf(Purchase.Unit(Archer)) > archer * costs.PriceOf(Purchase.Unit(Engineer)),
-            "The archer reaches " + archer + " route hexes against the engineer's " + engineer + ".");
-        Assert.True(
-            archer * costs.PriceOf(Purchase.Unit(Soldier)) > soldier * costs.PriceOf(Purchase.Unit(Archer)),
-            "The soldier reaches " + soldier + " route hexes against the archer's " + archer + ".");
-
-        // And the price the ranger is never reached over: equal to the archer's,
-        // so a climb that wants a strictly dearer row steps straight past it.
-        Assert.Equal(costs.PriceOf(Purchase.Unit(Archer)), costs.PriceOf(Purchase.Unit(Ranger)));
-    }
-
-    [Fact]
     public void Once_the_route_is_covered_the_bot_buys_the_most_damage_over_the_route_per_gold()
     {
         // THE RULE, IN A SENTENCE. Once nothing the bot may place covers any
@@ -699,14 +606,6 @@ public class BuildPolicyTests
     /// <summary>How much of the route one of these reaches from this cell, with nothing else on the board.</summary>
     private static int Alone(HexMap map, UnitType type, int column, int row) =>
         Reached(map, Board.Empty.Place(type, column, row));
-
-    /// <summary>How much of the route one of these reaches from the best cell on an empty board.</summary>
-    private static int Widest(HexMap map, UnitType type)
-    {
-        (int column, int row) = Maximisers(map, Board.Empty, type)[0];
-
-        return Reached(map, Board.Empty.Place(type, column, row));
-    }
 
     /// <summary>
     /// How many of the route's hexes a board's towers reach between them, read

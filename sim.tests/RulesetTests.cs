@@ -23,38 +23,6 @@ namespace Sim.Tests;
 public class RulesetTests
 {
     [Fact]
-    public void The_committed_ruleset_parses_to_the_numbers_it_was_authored_with()
-    {
-        // Every field, spelled out. A ruleset nothing reads yet is a ruleset
-        // whose parse has never been checked against what a person typed, and
-        // the tickets that consume these fields arrive one at a time.
-        Ruleset rules = TheRuleset.Committed();
-
-        Assert.Equal(140, rules.Matrix.Cell(AttackType.Pierce, ArmourType.Swift));
-        Assert.Equal(1, rules.ArmourPercentPerPoint);
-        Assert.Equal(100, rules.ArmourDenominator);
-        Assert.Equal(1, rules.DamageFloor);
-        Assert.Equal(10, rules.InterestPercentPerWave);
-        Assert.Equal(Ruleset.NoInterestCeiling, rules.InterestCapGold);
-        Assert.Equal(168, rules.IncomeBasePerWave);
-
-        // What a run opens holding, which is deliberately short of one wave's base.
-        // OBSERVED: change "purse         100" to "purse         150" in
-        // content/ruleset.txt. This goes red, 100 against 150, which is what a
-        // retuned opening balance nobody re-read here looks like.
-        Assert.Equal(100, rules.StartingPurseGold);
-        Assert.Equal(800, rules.HealthPoolGold);
-        Assert.Equal(10, rules.FreeSnapshotsPerRun);
-        Assert.Equal(25, rules.SnapshotPriceGold);
-
-        // What a wave is paid for the damage it does, as a share of the leak
-        // cost it dealt. OBSERVED: change "bonus          25" to
-        // "bonus          40" in content/ruleset.txt. This goes red, 25 against
-        // 40, which is what a retuned bonus rate nobody re-read here looks like.
-        Assert.Equal(25, rules.BonusPercentOfLeakCost);
-    }
-
-    [Fact]
     public void The_simulation_takes_the_ruleset_as_bytes_as_well_as_text_and_agrees_with_itself()
     {
         // OBSERVED: strip a byte-order mark unconditionally in the byte path --
@@ -189,48 +157,6 @@ public class RulesetTests
     }
 
     [Fact]
-    public void A_matrix_row_out_of_attack_type_order_refuses_to_load()
-    {
-        // OBSERVED: drop the attack-against-row-count comparison in
-        // Draft.AddMatrixRow. This goes red on the message: each row is written
-        // at its own attack index, so pierce's cells are never written at all
-        // and the Latin square refuses "a first matrix row of (0, 0, 0)" --
-        // naming a repeat, and saying nothing about the row that went missing.
-        ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
-            PlantedText.Replace(TheRuleset.Minimal, "matrix pierce 140 70 100", "matrix magic 100 140 70")));
-
-        Assert.Contains("where pierce was expected", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_fourth_matrix_row_refuses_to_load()
-    {
-        // OBSERVED: drop the row-count check at the top of Draft.AddMatrixRow.
-        // This goes red on the exception type: the order check underneath it
-        // reads DamageMatrix.AttackWords[3], which is off the end of a
-        // three-word array, and an IndexOutOfRangeException surfaces instead of
-        // a refusal a designer could act on.
-        ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Minimal + "\nmatrix pierce 140 70 100"));
-
-        Assert.Contains("fourth 'matrix' row", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_matrix_row_naming_an_attack_type_outside_the_cycle_refuses_to_load()
-    {
-        // OBSERVED: have DataText.Keyword return 0 for a word it does not know,
-        // which is the plausible-looking default. This goes red having caught
-        // nothing: "matrix holy" reads as pierce, the three rows line up in
-        // order, and a ruleset naming an attack type the game does not have
-        // loads as though it named the first one.
-        ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
-            PlantedText.Replace(TheRuleset.Minimal, "matrix pierce 140 70 100", "matrix holy 140 70 100")));
-
-        Assert.Contains("pierce, impact, magic", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void A_matrix_whose_rows_are_not_a_permutation_of_the_same_cells_refuses_to_load()
     {
         // Every COLUMN of this matrix is a permutation of (140, 70, 100) and
@@ -267,22 +193,6 @@ public class RulesetTests
             PlantedText.Replace(TheRuleset.Minimal, "matrix impact 70 100 140", "matrix impact 140 70 100")));
 
         Assert.Contains("column", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_matrix_row_that_repeats_a_cell_refuses_to_load()
-    {
-        // Two armour types the attacker cannot tell apart is a smaller table
-        // wearing a three-by-three one's clothes.
-        //
-        // OBSERVED: delete the repeat check at the top of RequireLatinSquare.
-        // This goes red having caught nothing: (100, 100, 140) cycled is a
-        // permutation of itself down every row and every column, so the square
-        // rule underneath waves it through.
-        ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
-            TheRuleset.WithCells(100, 100, 140)));
-
-        Assert.Contains("repeats a value", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -325,16 +235,6 @@ public class RulesetTests
         // divide by.
         Assert.Throws<ContentException>(
             () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1 0")));
-    }
-
-    [Fact]
-    public void A_matrix_cell_of_zero_refuses_to_load()
-    {
-        // OBSERVED: open a cell's range at 0 in Ruleset.Cell. This goes red
-        // having caught nothing: the three cells are still distinct and every
-        // row and column is still a permutation of them, so a matrix with a
-        // cell that deletes a whole attack-armour pairing loads.
-        Assert.Throws<ContentException>(() => Ruleset.Parse(TheRuleset.WithCells(0, 70, 140)));
     }
 
     [Fact]

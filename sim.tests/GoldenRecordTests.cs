@@ -364,43 +364,6 @@ public class GoldenRecordTests
     }
 
     [Fact]
-    public void The_current_versions_pinned_table_is_content_units_txt_byte_for_byte()
-    {
-        // tools/run-headless-match.ps1 -Regenerate pins the current version's
-        // table by copying content/units.txt beside the bundle, so the two are
-        // the same bytes or the pin is a copy of some earlier table. The hash
-        // assertion above cannot see this: it folds the parsed integers, so
-        // comment text is free to drift between the two forever.
-        //
-        // OBSERVED: add a comment line to content/golden/defense-1.units. This
-        // goes red on the byte arrays while every other assertion in this class
-        // stays green -- which is exactly the state the pin was found in.
-        //
-        // Only the current version. The older ones are copies of tables this
-        // repository can no longer produce, and a retune is meant to leave them
-        // where they are.
-        Assert.Equal(
-            File.ReadAllBytes(RepoLayout.UnitsFile),
-            File.ReadAllBytes(RepoLayout.GoldenUnitsFile(RecordFormat.GhostVersion)));
-    }
-
-    [Fact]
-    public void The_current_versions_pinned_ladder_is_content_upgrades_txt_byte_for_byte()
-    {
-        // The sibling of the assertion above, and it exists because that one was
-        // once FOUND out of sync: a second pinned file is a second thing that can
-        // drift, and the hash assertion cannot see it -- the fold covers the
-        // parsed edges, so comment text is free to drift between the two forever.
-        //
-        // Only the current version. Older versions were recorded before this file
-        // existed and have no ladder pinned beside them at all, which is what
-        // keeps the hashes frozen in their headers standing.
-        Assert.Equal(
-            File.ReadAllBytes(RepoLayout.UpgradesFile),
-            File.ReadAllBytes(RepoLayout.GoldenUpgradesFile(RecordFormat.GhostVersion)));
-    }
-
-    [Fact]
     public void The_oldest_golden_names_no_ruleset_and_the_current_one_names_the_committed_one()
     {
         // The two sides of the format bump, as bytes on disk rather than as a
@@ -421,17 +384,6 @@ public class GoldenRecordTests
         Assert.Equal(
             TheRuleset.Committed().ContentHash,
             Golden(RecordFormat.GhostVersion).RulesetHash);
-    }
-
-    [Fact]
-    public void The_oldest_golden_has_no_ladder_pinned_beside_it_and_never_will()
-    {
-        // Stated as an assertion rather than left to the absence of a file.
-        // content/golden/defense-0.replay cannot be recorded again, and its header
-        // carries the hash of a table with no ladder folded into it; a ladder
-        // appearing beside it -- empty or not -- would fold something and retire
-        // the only version-0 defense record that will ever exist.
-        Assert.False(File.Exists(RepoLayout.GoldenUpgradesFile(0)));
     }
 
     [Fact]

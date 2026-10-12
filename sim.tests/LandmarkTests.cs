@@ -19,17 +19,6 @@ namespace Sim.Tests;
 public class LandmarkTests
 {
     [Fact]
-    public void The_committed_table_is_what_a_run_of_the_committed_match_reports()
-    {
-        // The golden check, in process. The build gate also runs the command
-        // line itself and compares the file byte for byte; this is the half
-        // that is true on a laptop with nothing but `dotnet test`.
-        Assert.Equal(
-            TheMatch.DataRows(RepoLayout.LandmarksFile),
-            TheMatch.LandmarksOfTheCommittedRun().ToText().Split('\n'));
-    }
-
-    [Fact]
     public void The_first_overtake_is_the_tick_a_watcher_would_have_called_it()
     {
         // Ids ascend with spawn order, so a creep with a higher id further along

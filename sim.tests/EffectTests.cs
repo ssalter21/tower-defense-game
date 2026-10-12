@@ -732,130 +732,78 @@ public class EffectTests
     // ------------------------------------------------------------------
 
     [Fact]
-    public void The_snapshot_says_a_creep_is_slowed_for_exactly_the_ticks_the_slow_is_on()
+    public void The_snapshot_says_what_is_on_a_creep_its_speed_its_armour_and_its_pool()
     {
-        // The state a view draws a tint from. It is on the picture rather than
-        // on the event stream because a seek re-simulates and throws the events
-        // of the re-run ticks away -- so a creep that was slowed before the
-        // scrub has to still be slowed after it, which only a snapshot field
-        // can say. See docs/adr/0007-snapshot-is-the-only-view-input.md.
+        // The state a view draws a tint and a bar from. It is on the picture
+        // rather than on the event stream because a seek re-simulates and throws
+        // the events of the re-run ticks away -- so a creep that was slowed
+        // before the scrub has to still be slowed after it, which only a
+        // snapshot field can say. See
+        // docs/adr/0007-snapshot-is-the-only-view-input.md.
         //
         // OBSERVED: report Effects.SpeedMagnitude of the wrong creep -- index
         // rather than id, or a stale copy taken before the tick. Every
         // assertion about how far the creep walked stays green, because the
         // step is put together where the modifier lands and never read back
         // out of the snapshot.
-        Match match = Corridor("tower 10 2 1", "order 0 1 1 0");
+        Match frosted = Corridor("tower 10 2 1", "order 0 1 1 0");
 
-        match.Advance(1);
-        Assert.Equal(FrostMagnitude, Carried(match).SpeedMagnitude);
+        frosted.Advance(1);
+        Assert.Equal(FrostMagnitude, Carried(frosted).SpeedMagnitude);
 
         // The frost tower's cooldown is a hundred thousand ticks, so the slow
         // lands once and is never refreshed: it is on for exactly the sixty
         // ticks after the one it landed on, and the snapshot says so on each of
         // them and on none after.
-        match.Advance(FrostDuration);
-        Assert.Equal(FrostMagnitude, Carried(match).SpeedMagnitude);
+        frosted.Advance(FrostDuration);
+        Assert.Equal(FrostMagnitude, Carried(frosted).SpeedMagnitude);
 
-        match.Advance(1);
-        Assert.Equal(0, Carried(match).SpeedMagnitude);
+        frosted.Advance(1);
+        Assert.Equal(0, Carried(frosted).SpeedMagnitude);
+        Assert.Equal(0, Carried(frosted).ArmourMagnitude);
+        Assert.Equal(0, Carried(frosted).Shield);
 
-        // And nothing else on that creep moved, so a view reading one field is
-        // not reading four that happen to agree.
-        Assert.Equal(0, Carried(match).ArmourMagnitude);
-        Assert.Equal(0, Carried(match).Shield);
-    }
-
-    [Fact]
-    public void The_snapshot_says_a_creep_is_hastened_with_the_same_field_the_slow_uses()
-    {
-        // One field for both directions, because a magnitude is a displacement
-        // and the sign is which way -- so a haste is not a second contract and
-        // a view that draws a slow has already been handed the other half. The
-        // herald's aura reaches its own side and its own cell, so it hastens
-        // itself on the first tick.
-        Match match = Corridor("tower 15 2 1", "order 0 4 1 0");
-
-        match.Advance(1);
-
-        Assert.Equal(HeraldMagnitude, Carried(match).SpeedMagnitude);
-    }
-
-    [Fact]
-    public void The_snapshot_says_what_a_curse_did_to_a_creeps_armour()
-    {
-        // The armour a landing is resolved through is the authored number under
-        // its modifier, and the modifier is the half nothing on screen could
-        // otherwise show: a cursed creep takes more from an identical roll and
-        // looks exactly like one that did not.
-        Match match = Corridor("tower 14 2 1", "order 0 1 1 0");
-
-        match.Advance(2);
-
-        Assert.Equal(CurseMagnitude, Carried(match).ArmourMagnitude);
-        Assert.Equal(0, Carried(match).SpeedMagnitude);
-    }
-
-    [Fact]
-    public void The_snapshot_carries_the_pool_in_front_of_a_creeps_health_whichever_granted_it()
-    {
-        // One number for two pools. The inward tower fires and damages nothing
-        // -- its bubble is pointed at its own side -- so what these two report
-        // is what was granted rather than what survived a shot.
-        //
-        // The herald's is on its own row and is there from the tick it walks
-        // on; the warden's is a share of the health it stands in front of, and
-        // arrives when the aura first pulses.
-        Assert.Equal(HeraldShield, Carried(Advanced("tower 15 2 1", "order 0 4 1 0", ticks: 1)).Shield);
-
+        // A haste is the same field with the other sign, so it is not a second
+        // contract. The herald's aura reaches its own cell and hastens itself.
         Assert.Equal(
-            Effects.Granted(WalkerMaxHp, WardenMagnitude),
-            Carried(Advanced("tower 15 2 1", "order 0 3 1 0", ticks: 1)).Shield);
+            HeraldMagnitude,
+            Carried(Advanced("tower 15 2 1", "order 0 4 1 0", ticks: 1)).SpeedMagnitude);
 
-        // And a creep carrying both reports both, added. The herald and the
-        // warden are released on the same tick at the same distance, so each
-        // stands inside the other's sphere and the herald ends the tick holding
-        // its own row's pool and the warden's grant at once.
+        // A curse is the armour modifier: a cursed creep takes more from an
+        // identical roll and otherwise looks exactly like one that did not.
+        Assert.Equal(
+            CurseMagnitude,
+            Carried(Advanced("tower 14 2 1", "order 0 1 1 0", ticks: 2)).ArmourMagnitude);
+
+        // One number for every pool in front of a creep's health, added. The
+        // herald and the warden are released together, so the herald holds its
+        // own row's pool and the warden's grant at once.
         //
-        // OBSERVED: report Effects.GrantedShield alone, which is the field the
-        // effect model owns and the obvious one to reach for. Both assertions
-        // above stay green -- one row grants nothing and the other authors
-        // nothing -- and this goes red at 500000 against 500400, which is a
-        // shield bar four hundred points short for the whole of a match.
+        // OBSERVED: report Effects.GrantedShield alone. This goes red at 500000
+        // against 500400, a shield bar four hundred points short for the whole
+        // of a match.
         Assert.Equal(
             HeraldShield + Effects.Granted(WalkerMaxHp, WardenMagnitude),
             Carrying(Advanced("tower 15 2 1", "order 0 3 1 0\norder 0 4 1 0", ticks: 1), HeraldType).Shield);
-    }
 
-    [Fact]
-    public void The_pool_the_snapshot_reports_falls_by_what_a_landing_took_off_it()
-    {
-        // The field is what is left rather than what was granted, so a bar
-        // drawn from it empties as the shots land. The plain tower deals a flat
-        // hundred a shot and the herald's four hundred points are the only pool
-        // in front of its health, so the drop is the whole of what the shield
-        // absorbed.
-        Match match = Corridor("tower 12 2 1", "order 0 4 1 0");
-        match.Advance(1);
+        // And the field is what is left rather than what was granted, so a bar
+        // drawn from it empties as the shots land -- and nothing reaches the
+        // health behind it while it does.
+        Match shot = Corridor("tower 12 2 1", "order 0 4 1 0");
+        shot.Advance(1);
 
-        int before = Carried(match).Shield;
+        int before = Carried(shot).Shield;
 
-        // Under the four hundred the row authors already, because the tower's
-        // first shot landed on the tick the creep walked on. That is the whole
-        // claim: the field is what is left and never what was granted.
         Assert.True(
             before > 0 && before < HeraldShield,
             $"A pool of {HeraldShield} reads {before} after one landing.");
 
-        match.Advance(60);
+        shot.Advance(60);
 
-        int after = Carried(match).Shield;
+        int after = Carried(shot).Shield;
 
         Assert.True(after < before, $"A pool of {before} was still {after} after sixty ticks under fire.");
-
-        // And nothing has reached the health behind it, so what fell above is
-        // the pool being spent rather than the creep being hurt.
-        Assert.Equal(WalkerMaxHp, Carried(match).Hp);
+        Assert.Equal(WalkerMaxHp, Carried(shot).Hp);
     }
 
     [Fact]

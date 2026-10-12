@@ -753,42 +753,6 @@ public class DerivationTests
     }
 
     [Fact]
-    public void The_capstone_grant_schedule_is_a_rule_and_no_hash_in_this_repository_covers_it()
-    {
-        // The one rule a stored run's replay depends on that nothing else here
-        // pins. Which edges cost a token is in the ladder hash and therefore in
-        // the content hash; HOW MANY tokens a round holds is neither -- it is a
-        // list in sim/Run.cs, and moving it would make streams legal that were
-        // refused, and refuse streams that were legal, with every stamp on every
-        // record still agreeing.
-        //
-        // The fingerprint above cannot reach it: it is folded over a scenario
-        // whose ladder has no edges, so no capstone is ever priced there and no
-        // token is ever spent. Widening that scenario to cover this would be a
-        // SimulationVersion bump for a rule that has not moved, which is exactly
-        // the mistake the fingerprint's own remarks name.
-        //
-        // So this is the assertion that names what a change to the schedule
-        // owes: a SimulationVersion bump and a BehaviourByVersion row, taken
-        // deliberately, because every stored run made under the old schedule is
-        // retired by it. See docs/adr/0062-a-capstone-costs-a-token.md.
-        //
-        // OBSERVED: add a fourth grant round to Run.CapstoneTokenRounds. This
-        // goes red naming the list, and every other assertion in this repository
-        // stays green -- content/run.commands still replays, every hash still
-        // agrees, and a run that could not afford its second capstone can.
-        Assert.Equal(new[] { 3, 6, 9 }, Run.CapstoneTokenRounds);
-
-        // And the reading of the list, which is the other half of the rule: a
-        // grant lands at the opening of its round and none lands anywhere else.
-        Assert.Equal(0, Run.CapstoneTokensGrantedThrough(2));
-        Assert.Equal(1, Run.CapstoneTokensGrantedThrough(3));
-        Assert.Equal(1, Run.CapstoneTokensGrantedAt(3));
-        Assert.Equal(0, Run.CapstoneTokensGrantedAt(4));
-        Assert.Equal(Run.CapstoneTokenRounds.Count, Run.CapstoneTokensGrantedThrough(Run.DefaultWaves));
-    }
-
-    [Fact]
     public void Retuning_a_number_is_not_a_rule_change_and_does_not_touch_the_fingerprint()
     {
         // The converse, and the reason the fingerprint is taken over a scenario

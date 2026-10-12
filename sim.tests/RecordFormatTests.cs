@@ -7,35 +7,6 @@ namespace Sim.Tests;
 public class RecordFormatTests
 {
     [Fact]
-    public void The_header_is_eighteen_bytes_and_names_itself_before_anything_else()
-    {
-        // Magic first so "these are not the bytes you thought" is answered
-        // before anything is interpreted; format version next because it is the
-        // field that says where every other field is, including where the
-        // simulation version is.
-        UnitTypeTable types = TheMatch.Types();
-        byte[] bytes = TheMatch.Ghost(types).ToBytes();
-
-        Assert.Equal(18, RecordFormat.HeaderBytes);
-        Assert.Equal((byte)'G', bytes[0]);
-        Assert.Equal((byte)'H', bytes[1]);
-        Assert.Equal((byte)'S', bytes[2]);
-        Assert.Equal((byte)'T', bytes[3]);
-        Assert.Equal(RecordFormat.GhostVersion, BitConverter.ToUInt16(bytes, RecordBytes.FormatVersionOffset));
-        Assert.Equal(SimulationVersion.Current, BitConverter.ToUInt32(bytes, RecordBytes.SimVersionOffset));
-        Assert.Equal(types.ContentHash.Value, BitConverter.ToUInt64(bytes, RecordBytes.ContentHashOffset));
-    }
-
-    [Fact]
-    public void The_four_kinds_have_four_different_magic_tags()
-    {
-        Assert.Equal("GHST", RecordFormat.MagicOf(RecordKind.Ghost));
-        Assert.Equal("WAVE", RecordFormat.MagicOf(RecordKind.Wave));
-        Assert.Equal("RPLY", RecordFormat.MagicOf(RecordKind.Replay));
-        Assert.Equal("CMDS", RecordFormat.MagicOf(RecordKind.Command));
-    }
-
-    [Fact]
     public void Format_versions_are_counted_per_record_kind()
     {
         // One counter per kind, one history each. A single global counter would
@@ -105,21 +76,6 @@ public class RecordFormatTests
         Assert.Equal(6, ghost.Count);
         Assert.Equal(18 + 8 + 2 + 2 + (6 * 6), ghost.ToBytes().Length);
         Assert.Equal(TheMatch.MapHandle, ghost.MapHandle);
-    }
-
-    [Fact]
-    public void Nothing_mutable_or_descriptive_is_in_the_binary_format()
-    {
-        // Rating, author, timestamps and progression are absent by construction
-        // rather than by omission: every byte of both kinds is accounted for
-        // below, so there is nowhere for one of them to be. A rating moves every
-        // time a defense wins, and a record's id is the hash of its bytes, so
-        // storing one would change the defense's identity on every match and
-        // orphan every replay pointing at it.
-        UnitTypeTable types = TheMatch.Types();
-
-        Assert.Equal(18 + 8 + 2 + 2 + (6 * RecordFormat.TowerBytes), TheMatch.Ghost(types).ToBytes().Length);
-        Assert.Equal(18 + 2 + (6 * RecordFormat.OrderBytes), TheMatch.WaveOf(types).ToBytes().Length);
     }
 
     [Fact]

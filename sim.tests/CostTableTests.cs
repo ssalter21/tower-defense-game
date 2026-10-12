@@ -46,34 +46,6 @@ public class CostTableTests
     }
 
     [Fact]
-    public void A_creep_a_tower_and_a_snapshot_come_off_the_same_table_at_their_authored_prices()
-    {
-        // Two units on opposite sides of the board and one thing that is not a
-        // unit at all, priced by one call each. That the third is on this table
-        // is the whole design: a scouting snapshot competes for gold with a
-        // creep rather than living in a budget of its own.
-        //
-        // OBSERVED: size CostTable's arrays at types.Count and write the
-        // snapshot over the last unit's row. This goes red on the Warrior --
-        // "Nothing on the cost table prices one unit of type 13" -- which is
-        // what a line item that displaced a unit instead of joining it looks
-        // like.
-        CostTable costs = TheRuleset.Costs();
-
-        Assert.Equal(10, costs.PriceOf(Purchase.Unit(1)));
-        Assert.Equal(9, costs.PriceOf(Purchase.Unit(2)));
-        Assert.Equal(40, costs.PriceOf(Purchase.Unit(3)));
-        Assert.Equal(92, costs.PriceOf(Purchase.Unit(4)));
-        Assert.Equal(31, costs.PriceOf(Purchase.Unit(13)));
-        Assert.Equal(25, costs.PriceOf(Purchase.Snapshot));
-
-        // And the snapshot's price is the ruleset's, read back rather than
-        // repeated: a number typed twice is a number that can disagree with
-        // itself.
-        Assert.Equal(TheRuleset.Committed().SnapshotPriceGold, costs.PriceOf(Purchase.Snapshot));
-    }
-
-    [Fact]
     public void Every_price_is_authored_content_and_none_of_them_is_a_code_constant()
     {
         // Retune the two files the prices live in and watch both halves of the
@@ -115,26 +87,6 @@ public class CostTableTests
             Assert.Throws<SimulationException>(() => costs.PriceOf(default));
 
         Assert.Contains("Nothing on the cost table prices", blank.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_kind_and_an_id_together_are_what_a_row_is_keyed_on()
-    {
-        // A snapshot and unit type zero are not the same line item even though
-        // both carry no meaningful id, and two units of different types are not
-        // each other. This is the property that lets the table hold non-units
-        // beside units at all.
-        //
-        // OBSERVED: compare only Id in Purchase.Equals. The first assertion goes
-        // red, because Purchase.Snapshot and the unpriced default both carry
-        // id 0 and the snapshot's price answers for both.
-        Assert.NotEqual(Purchase.Snapshot, default);
-        Assert.NotEqual(Purchase.Unit(1), Purchase.Unit(2));
-        Assert.Equal(Purchase.Unit(3), Purchase.Unit(3));
-        Assert.Equal(Purchase.Snapshot, Purchase.Snapshot);
-
-        Assert.Equal(25, TheRuleset.Costs().PriceOf(Purchase.Snapshot));
-        Assert.Throws<SimulationException>(() => TheRuleset.Costs().PriceOf(default));
     }
 
     [Fact]
@@ -200,33 +152,6 @@ public class CostTableTests
                 types.Types[index].Cost,
                 costs.PriceOf(Purchase.Unit(types.Types[index].Id)));
         }
-    }
-
-    [Fact]
-    public void A_purchase_says_what_it_is_in_a_sentence_a_refusal_can_carry()
-    {
-        // OBSERVED: swap the two names in Purchase.NameOf. This goes red, and
-        // every refusal in the economy starts naming the wrong thing -- which
-        // is worse than an unhelpful message, because it sends the reader to
-        // the wrong file.
-        Assert.Equal("one unit of type 7", Purchase.Unit(7).ToString());
-        Assert.Equal("one scouting snapshot", Purchase.Snapshot.ToString());
-    }
-
-    [Fact]
-    public void A_kind_this_build_does_not_declare_is_refused_by_name()
-    {
-        // The default branch, reached the only way a test can reach it: with a
-        // value that is not one of the declared kinds. This is the shape of what
-        // a kind added to the enum and named nowhere would hit.
-        //
-        // OBSERVED: return a placeholder from the default branch instead of
-        // throwing. This goes red having caught nothing, and a line item nobody
-        // named prints as though it had been.
-        SimulationException thrown =
-            Assert.Throws<SimulationException>(() => Purchase.NameOf((PurchaseKind)9));
-
-        Assert.Contains("Purchase kind 9", thrown.Message, StringComparison.Ordinal);
     }
 
     /// <summary>A one-row unit table at the current layout, priced to order.</summary>

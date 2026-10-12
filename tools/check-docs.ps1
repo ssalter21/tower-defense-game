@@ -38,9 +38,8 @@
     refusal, because a document citing an issue that does not exist is the same
     species of lie as one citing an issue that is closed.
 
-    Sit-down ticks are not checked here. SitDownTests already pins every tick
-    quoted in docs/sit-down.md against content/landmarks.txt, and a second
-    opinion on the same file would only be a second thing to keep in step.
+    Sit-down ticks are not checked here or anywhere: docs/sit-down.md says its
+    table is an unchecked copy of content/landmarks.txt.
 
 .EXAMPLE
     ./tools/check-docs.ps1

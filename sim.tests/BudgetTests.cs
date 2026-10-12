@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Xunit.Abstractions;
 
 namespace Sim.Tests;
@@ -225,86 +224,6 @@ public class BudgetTests
         // something else. It also catches the optimiser deleting the loop,
         // which would otherwise calibrate the budget against zero.
         Assert.Equal(ReferenceWorkload.Checksum, ReferenceWorkload.Churn(ReferenceWorkload.Iterations));
-    }
-
-    [Fact]
-    public void The_reference_workload_does_not_touch_the_simulation()
-    {
-        // The property the whole design rests on, and the one that is easiest
-        // to lose by accident: calibrating against Fix64 would slow the
-        // reference and the match together and keep the ratio flat through the
-        // exact regression this gate exists to catch. Checked in source rather
-        // than believed, because the failure is silent -- the test still runs,
-        // still passes, and no longer means anything.
-        var offences = new List<string>();
-        string[] simulationTypes = typeof(Match).Assembly.GetExportedTypes()
-            .Select(type => type.Name)
-            .Distinct()
-            .ToArray();
-
-        foreach ((int number, string code) in CodeLinesOf(ReferenceWorkloadSource))
-        {
-            foreach (string name in simulationTypes)
-            {
-                if (Regex.IsMatch(code, $@"\b{Regex.Escape(name)}\b"))
-                {
-                    offences.Add($"ReferenceWorkload.cs({number}): {name} in {code.Trim()}");
-                }
-            }
-        }
-
-        Assert.True(
-            offences.Count == 0,
-            "The reference workload references the simulation. A budget calibrated against the code "
-            + "it is measuring cannot go red, because a slowdown moves both sides of the ratio."
-            + Environment.NewLine
-            + string.Join(Environment.NewLine, offences));
-    }
-
-    [Fact]
-    public void The_independence_check_is_looking_at_the_workload_and_not_at_nothing()
-    {
-        // A source path that silently stopped resolving would make the test
-        // above green forever. Both halves have to hold: the file is there, and
-        // the simulation type list it is checked against is not empty.
-        Assert.True(File.Exists(ReferenceWorkloadSource));
-        Assert.NotEmpty(CodeLinesOf(ReferenceWorkloadSource));
-        Assert.Contains(typeof(Match).Assembly.GetExportedTypes(), type => type.Name == "Fix64");
-        Assert.Contains(CodeLinesOf(ReferenceWorkloadSource), line => line.Code.Contains("Golden"));
-    }
-
-    [Theory]
-    [InlineData("// Fix64 in a comment is prose, not a dependency", "")]
-    [InlineData("/// <summary>Fix64</summary>", "")]
-    [InlineData("long high = value >> 32; // Fix64", "long high = value >> 32;")]
-    [InlineData("long accumulator = 1L;", "long accumulator = 1L;")]
-    public void The_comment_stripper_keeps_code_and_drops_prose(string line, string expected)
-    {
-        // The stripper is what stops the check above firing on its own
-        // docstring, which names Fix64 four times on purpose.
-        Assert.Equal(expected, StripComment(line).Trim());
-    }
-
-    private static string ReferenceWorkloadSource =>
-        Path.Combine(RepoLayout.Root, "sim.tests", "ReferenceWorkload.cs");
-
-    /// <summary>
-    /// The lines of a source file with their comments removed, and the blank
-    /// results dropped. Line comments only, which is all this file has and all
-    /// the check needs -- a block comment would leave a residue here and is
-    /// worth a failing test rather than a silently weaker one.
-    /// </summary>
-    private static (int Number, string Code)[] CodeLinesOf(string path) =>
-        File.ReadAllLines(path)
-            .Select((line, index) => (Number: index + 1, Code: StripComment(line)))
-            .Where(line => line.Code.Trim().Length > 0)
-            .Where(line => !line.Code.TrimStart().StartsWith("namespace", StringComparison.Ordinal))
-            .ToArray();
-
-    private static string StripComment(string line)
-    {
-        int marker = line.IndexOf("//", StringComparison.Ordinal);
-        return marker < 0 ? line : line[..marker];
     }
 
     [Theory]

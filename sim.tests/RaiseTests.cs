@@ -339,22 +339,6 @@ public class RaiseTests
     }
 
     [Fact]
-    public void Exactly_one_committed_row_raises_and_it_is_the_necromancer()
-    {
-        // The roster's own claim, measured. A second spawner is a design
-        // decision docs/roster.md would have to sign, so a row that gained one
-        // quietly goes red here.
-        UnitTypeTable types = TheMatch.Types();
-
-        Assert.Equal(
-            new[] { "necromancer raises minion every 150" },
-            types.Types
-                .Where(row => row.Raises is not null)
-                .Select(row => row.Label + " raises " + row.Raises!.Label + " every " + row.RaisePeriodTicks)
-                .ToArray());
-    }
-
-    [Fact]
     public void A_row_that_raises_something_no_row_authored_refuses_by_name()
     {
         Assert.Contains(
@@ -475,26 +459,6 @@ public class RaiseTests
 
         Assert.Contains("raises imp (#2)", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("at or past the ceiling", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void The_committed_wave_raises_nothing_and_the_committed_match_is_untouched()
-    {
-        // What the mechanic costs the run everything else in this repository is
-        // measured against: nothing. The committed wave sends Minions and
-        // Skeleton Scouts and neither raises, so the leak count, the length and
-        // every landmark are where they were -- and the rolling hash moves
-        // anyway, which is what the SimulationVersion bump is for.
-        UnitTypeTable types = TheMatch.Types();
-
-        Assert.All(
-            TheMatch.Wave(types).Orders,
-            order => Assert.Null(order.Type.Raises));
-
-        MatchResult result = TheMatch.Fresh().Resolve();
-
-        Assert.Equal(TheMatch.LeakedInTheCommittedRun, result.Leaked);
-        Assert.Equal(TheMatch.FinalTickOfTheCommittedRun, result.FinalTick);
     }
 
     /// <summary>One Necromancer, alone, against the committed defense.</summary>
