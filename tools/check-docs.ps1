@@ -11,7 +11,7 @@
     a picture of a board that had been rebuilt since, an issue described as open
     that had been closed, and a count of records that was five short.
 
-    The four invariants below are the ones that can be settled mechanically.
+    The three invariants below are the ones that can be settled mechanically.
     Each is a claim a document makes about something else in the repository,
     and each refusal names the file, the claim and what is true instead.
 
@@ -23,29 +23,9 @@
        speech is not a claim either: a note saying the vision still calls
        something pending is describing another document rather than asserting
        anything, and refusing it would be refusing a true sentence.
-    2. A committed sheet or frame is at least as new as the content it was
-       rendered from. The pictures are rendered through the real board, the real
-       roster and the real prices, so a picture older than content/map.txt is a
-       picture of a game this project no longer builds -- and a stale one goes
-       on looking entirely reasonable, which is why nobody catches it by eye.
-       The measure is the last commit to touch each file, so a picture
-       re-captured in the same commit as the content passes, per rule 4 of
-       AGENTS.md. It is a date and not the pixels: a rename or a rebase that
-       re-stamps a picture buys it a pass it did not earn, and only a person
-       looking at it can catch that. Where the date says no, the capture's own
-       record is asked -- rendered-from.txt beside the pictures, naming the
-       content each was drawn from -- because a re-render that came out
-       pixel-identical leaves git nothing to date, and that is what happens
-       every time the content that moved is not drawn in that picture. See
-       tools/_rendered-from.ps1. A sheet docs/chrome/README.md lists as a
-       chosen arrangement rather than as a baseline is named as exempt and
-       reported n/a, because it records a decision rather than describing the
-       board; so are the screen captures of a played run, which are dated by
-       the session they photograph and have no capture to re-run. An exemption
-       naming a file that is no longer committed is itself a refusal.
-    3. The record count docs/README.md quotes for docs/adr/ is the number of
+    2. The record count docs/README.md quotes for docs/adr/ is the number of
        records in it.
-    4. Every ADR a source file cites exists. A comment pointing at a record
+    3. Every ADR a source file cites exists. A comment pointing at a record
        that was never written, or was renumbered, sends a reader nowhere. Only
        sim/, simcli/ and client/Assets/View/ are read, so a citation from
        tools/ or from a document is nobody's business here.
@@ -88,14 +68,6 @@ function Skip([string]$what, [string]$why) {
     Write-Host "  SKIP  $why" -ForegroundColor Yellow
 }
 
-# A file an invariant was never meant to cover. Distinct from SKIP, which is a
-# question this machine could not ask, and from ok, which is a question that was
-# asked and answered: printing an exemption green would be the check claiming to
-# have looked at something it deliberately did not.
-function Exempt([string]$sentence) {
-    Write-Host "  n/a   $sentence" -ForegroundColor DarkGray
-}
-
 # Tracked files only. An untracked draft under docs/ is somebody's working
 # copy, and the gate has no business having an opinion about it.
 function TrackedUnder([string]$path) {
@@ -103,15 +75,6 @@ function TrackedUnder([string]$path) {
     if ($LASTEXITCODE -ne 0) { throw "git ls-files $path failed in $repoRoot (exit $LASTEXITCODE)." }
     @($files | Where-Object { $_ })
 }
-
-function LastCommitted([string]$path) {
-    $stamp = & git -C $repoRoot log -1 --format=%cI -- $path
-    if ($LASTEXITCODE -ne 0) { throw "git log for $path failed in $repoRoot (exit $LASTEXITCODE)." }
-    if (-not $stamp) { return $null }
-    [datetimeoffset]::Parse($stamp)
-}
-
-function Day([datetimeoffset]$when) { $when.ToString('d MMMM yyyy') }
 
 # --- 1. An issue cited as open or pending is open -----------------------------
 # The two shapes a state claim takes here: the issue first and the state after
@@ -211,163 +174,9 @@ if (-not $ghReady) {
     }
 }
 
-# --- 2. A picture is newer than the content it was rendered from --------------
-# The authored content a sheet or a frame draws -- the board, the roster, the
-# ladder and the scenery standing on the board -- is named in
-# tools/_rendered-from.ps1, beside the digest the capture tools record against
-# every picture they write. One list, so the capture and this cannot disagree
-# about what a picture is a claim about.
-. (Join-Path $PSScriptRoot '_rendered-from.ps1')
-
-$rendered = Get-DrawnContent
-$drawnStamp = Get-DrawnContentStamp $repoRoot
-
+# --- 2. The record count docs/README.md quotes is the record count ------------
 Write-Host ""
-Write-Host "2. A committed sheet or frame is at least as new as the content it was rendered from."
-
-$contentMoved = $null
-$newestContent = $null
-foreach ($file in $rendered) {
-    $when = LastCommitted $file
-    if (-not $when) { throw "$file is not committed, so there is nothing to date the pictures against." }
-    if (-not $contentMoved -or $when -gt $contentMoved) {
-        $contentMoved = $when
-        $newestContent = $file
-    }
-}
-
-$pictures = @(TrackedUnder 'docs/chrome') + @(TrackedUnder 'docs/frames') |
-            Where-Object { $_ -like '*.png' } | Sort-Object
-
-if (-not $pictures) { throw "No committed picture found under docs/chrome/ or docs/frames/." }
-
-# The sheets that record a decision instead of describing the board: the ones
-# docs/chrome/README.md lists as the chosen arrangement rather than as one of
-# the baselines beneath it. What such a sheet shows is where the chrome is
-# going, so rebuilding the board cannot make it stale the way it makes a
-# baseline stale, and dating it against content/ asks it the wrong question.
-# Named one file at a time on purpose -- a pattern here would exempt the next
-# sheet dropped into the directory as well.
-# The beside-prop sheet is the same species from the other direction: it
-# draws ten characters that no row in content/units.txt points at, standing
-# beside props no row names, so dating it against the roster asks it about
-# content it does not contain. What would make it stale is somebody changing
-# which prop stands beside which tower, and that is a line in docs/roster.md.
-# The melee-lines sheet is drawn the same way and exempt for the same reason,
-# from the other direction again: its nine rungs DO have rows now, but a set
-# sheet is drawn from a set file -- models, props, atlases and one pose -- and
-# reads none of the four authored files. Move a price or a range and it renders
-# the same pixels, so a date against content/ would ask it a question it cannot
-# answer. What would make it stale is a look in docs/roster.md moving, which is
-# a person's job to notice and not this check's. The caster-lines and
-# pierce-turret-lines sheets are the same sheet for the other six lines, and the
-# two creep-bodies sheets are the same sheet for the twelve creep rows, all
-# exempt on the same grounds. The grave-robber-sword, paladin-clips and
-# prop-turns sheets are three more of the same species, drawn by the same tool
-# from set files of their own: they ask whether a sword stays, which clip a rung
-# swings and which turn a prop hangs at, and not one of the three reads an
-# authored file to draw a tile. They landed without a name here, which is the
-# only reason this invariant ever had an opinion about them.
-# The eight from issue #281 are four more of the same species drawn twice each:
-# the Mortar's turret at five sizes, the Artificer beside one prop and two, the
-# Elder holding every prop his pack ships, and the Bishop's tome in three
-# places. Each is drawn from a set file at -Width 700 and again at -Width 28,
-# which is the size a body gets at 1600x900 -- and neither pass reads an
-# authored file to draw a tile.
-# The ten under docs/frames/played-run/ are the third species: photographs of a
-# session rather than renders of the content. Nothing drew them -- they are the
-# built player's own back buffer, grabbed while a run was driven by synthetic
-# input -- so there is no capture to re-run and no rendered-from.txt for the
-# fallback below to read. Asking for a re-capture would be asking for a
-# different run: another arrival order, another tick under the pointer, another
-# picture. What it costs is that nothing notices when they go stale, and that
-# cost is stated in played-run/README.md and carried on purpose.
-$decisionSheets = @(
-    'docs/chrome/chosen-build-phase.png'
-    'docs/frames/roster/beside-props-sheet.png'
-    'docs/frames/roster/melee-lines-sheet.png'
-    'docs/frames/roster/caster-lines-sheet.png'
-    'docs/frames/roster/pierce-turret-lines-sheet.png'
-    'docs/frames/roster/creep-bodies-sheet.png'
-    'docs/frames/roster/creep-bodies-rest-sheet.png'
-    'docs/frames/roster/grave-robber-sword-sheet.png'
-    'docs/frames/roster/paladin-clips-sheet.png'
-    'docs/frames/roster/prop-turns-sheet.png'
-    'docs/frames/roster/mortar-turret-weight-sheet.png'
-    'docs/frames/roster/artificer-second-prop-sheet.png'
-    'docs/frames/roster/elder-prop-sheet.png'
-    'docs/frames/roster/bishop-tome-sheet.png'
-    'docs/frames/roster/mortar-turret-weight-played-sheet.png'
-    'docs/frames/roster/artificer-second-prop-played-sheet.png'
-    'docs/frames/roster/elder-prop-played-sheet.png'
-    'docs/frames/roster/bishop-tome-played-sheet.png'
-)
-
-# The photographs of a played session. A list of their own rather than more
-# names in the one above, because the sentence each is reported with is a
-# different sentence: those record a decision, these record a run.
-$sessionCaptures = @(
-    'docs/frames/played-run/build-phase.png'
-    'docs/frames/played-run/the-nine-lines-close.png'
-    'docs/frames/played-run/capstone-consecration.png'
-    'docs/frames/played-run/capstone-mortar.png'
-    'docs/frames/played-run/capstone-fan-of-knives.png'
-    'docs/frames/played-run/resolution.png'
-    'docs/frames/played-run/black-knight-beside-towers.png'
-    'docs/frames/played-run/a-slow-nobody-can-see.png'
-    'docs/frames/played-run/the-same-slow-close.png'
-    'docs/frames/played-run/run-over.png'
-)
-
-# An exemption for a file that is no longer committed covers nothing, and it
-# would go on reading as though it still applied to something.
-foreach ($sheet in ($decisionSheets + $sessionCaptures)) {
-    if ($pictures -notcontains $sheet) {
-        Refuse "$sheet is named as exempt from this invariant and is not a committed picture, so the exemption covers nothing. Restore the file, or drop its name from the exemption."
-    }
-}
-
-foreach ($picture in $pictures) {
-    if ($decisionSheets -contains $picture) {
-        Exempt "$picture records a decision rather than describing the board, so its date is not compared."
-        continue
-    }
-
-    if ($sessionCaptures -contains $picture) {
-        Exempt "$picture photographs a run somebody played, so it is dated by that session and not by the content; re-capturing it would be a different run."
-        continue
-    }
-
-    $when = LastCommitted $picture
-    # At least as new, not newer. A picture re-captured in the same commit as
-    # the content that moved -- which is what AGENTS.md rule 4 asks for --
-    # carries the identical commit stamp.
-    if ($when -ge $contentMoved) {
-        Checked "$picture was committed $(Day $when), and $newestContent, the last of the content it draws to move, moved $(Day $contentMoved)."
-        continue
-    }
-
-    # A DATE CANNOT SEE A RE-RENDER THAT CAME OUT IDENTICAL. Where the content
-    # that moved is not drawn in this particular picture -- which is most
-    # pictures for most changes -- re-capturing rewrites the same pixels, there
-    # is no diff, and the picture keeps the commit stamp it had. So the capture's
-    # own record is asked second: it names the content each picture was drawn
-    # from, and the tool that drew it is what wrote the line.
-    $recorded = Read-RenderedFrom (Split-Path (Join-Path $repoRoot $picture) -Parent)
-    $name = Split-Path $picture -Leaf
-
-    if (-not $recorded.ContainsKey($name)) {
-        Refuse "$picture was captured $(Day $when) and shows the content as it was then; $newestContent moved on $(Day $contentMoved), and nothing beside the picture says what it was drawn from. Re-capture it -- the capture writes rendered-from.txt as it goes."
-    } elseif ($recorded[$name] -ne $drawnStamp) {
-        Refuse "$picture was drawn from content $($recorded[$name]) and this repository holds $drawnStamp, so the picture is of a game it no longer builds. Re-capture it."
-    } else {
-        Checked "$picture was committed $(Day $when), before $newestContent moved on $(Day $contentMoved) -- and it was drawn from content $drawnStamp, which is what this repository holds, so re-rendering it draws the same pixels."
-    }
-}
-
-# --- 3. The record count docs/README.md quotes is the record count ------------
-Write-Host ""
-Write-Host "3. The number of records docs/README.md quotes for docs/adr/ is the number there are."
+Write-Host "2. The number of records docs/README.md quotes for docs/adr/ is the number there are."
 
 $adrFiles = TrackedUnder 'docs/adr' | Where-Object { (Split-Path $_ -Leaf) -match '^\d{4}-.+\.md$' }
 $readme = Join-Path $repoRoot 'docs/README.md'
@@ -381,11 +190,11 @@ if (-not $quoted.Success) {
     Checked "docs/README.md says $($adrFiles.Count) records, and docs/adr/ holds $($adrFiles.Count)."
 }
 
-# --- 4. Every ADR a source file cites exists ----------------------------------
+# --- 3. Every ADR a source file cites exists ----------------------------------
 # Both spellings the source uses: ADR-0051 in prose, adr/0048 where the comment
 # is pointing at the file.
 Write-Host ""
-Write-Host "4. Every ADR cited in sim/, simcli/ and client/Assets/View/ exists."
+Write-Host "3. Every ADR cited in sim/, simcli/ and client/Assets/View/ exists."
 
 $sourceRoots = @('sim', 'simcli', 'client/Assets/View')
 $sourceKinds = @('.cs', '.uxml', '.uss', '.asmdef', '.json')

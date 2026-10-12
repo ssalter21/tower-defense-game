@@ -55,7 +55,7 @@ corridor, and the three clusters stand in the upper and right middle, so every o
 frame with the prop legible. Both are committed — see [`.gitignore`](.gitignore).
 
 Frames are named after the board (`beside-props-tick-*.png`), which is `capture-match-frames.ps1`'s own
-rule. `rendered-from.txt` beside each set is written by the capture and dates the frames against the content
+rule. `rendered-from.txt` beside each set is written by the capture and names the content
 they drew.
 
 ## What the candidates measured, kept so nobody measures it again

@@ -103,5 +103,5 @@ foreach ($c in 'mage-anchor-book-edge', 'mage-anchor-hat-top', 'mage-anchor-muzz
 ./tools/capture-match-frames.ps1 @common -Yaw -45 -OutDir docs/frames/mage-anchor/yaw-minus-45
 ```
 
-Each directory carries the `rendered-from.txt` the capture wrote beside its pictures, so
-`tools/check-docs.ps1` can date them against the content rather than against a commit.
+Each directory carries the `rendered-from.txt` the capture wrote beside its pictures, naming the content
+they were drawn from.

@@ -6,8 +6,7 @@ drawn through the real `MatchRoot`, hex floor, `OrbitCameraRig` and `MatchView` 
 out of `content/match.replay` — so a tick in a filename is a tick of the run `content/landmarks.txt` was made
 from. A frame is a function of its tick **and of the tick list it was asked for**, so a fixture is re-captured
 with the whole list in the recipe below and never one tick at a time. `rendered-from.txt` beside the pictures
-says which content each was drawn from, written by the capture and never by hand; `check-docs.ps1` reads it
-where a date says a picture is older than the content. The reasoning is
+says which content each was drawn from, written by the capture and never by hand. The reasoning is
 [ADR-0064](../adr/0064-a-committed-frame-is-documentation-not-an-oracle.md); the long captions are
 [`notes.md`](notes.md).
 

@@ -4,9 +4,8 @@
 # was captured.
 #
 # WRITTEN BY THE CAPTURE AND NEVER BY HAND. It says a picture was drawn,
-# and only the thing that drew it knows that. tools/check-docs.ps1 reads
-# it where a commit date cannot answer -- a re-render that came out
-# pixel-identical leaves git nothing to date.
+# and only the thing that drew it knows that. Nothing checks it; it is
+# here for a person asking which content a picture shows.
 #
 #       picture                        drawn from
 

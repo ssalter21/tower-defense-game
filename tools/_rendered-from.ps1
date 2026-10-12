@@ -8,22 +8,15 @@
         . (Join-Path $PSScriptRoot '_rendered-from.ps1')
 
     A picture under docs/ is a claim about the authored content it was drawn
-    from, and the claim goes stale when that content moves. check-docs.ps1 asks
-    the question with a date: a picture whose last commit is older than
-    content/units.txt's is a picture of a game this repository no longer builds.
-
-    A DATE ONLY ANSWERS IT WHERE RE-RENDERING CHANGES THE BYTES. A capture that
-    draws the same pixels leaves git nothing to record, so the picture keeps the
-    commit stamp it had -- and a date cannot tell that picture apart from one
-    nobody re-captured. It is not a rare case: it is what happens every time the
-    content that moved is not drawn in that particular picture, which is most of
-    them for most changes.
+    from, and the claim goes stale when that content moves. A commit date cannot
+    say which content a picture shows: a capture that draws the same pixels
+    leaves git nothing to record, so the picture keeps the stamp it had.
 
     So a capture writes down what it drew from. Each directory of committed
     pictures carries a rendered-from.txt of one line per picture: the file name
-    and one digest over the authored files every picture draws. A checker
-    recomputes the digest and compares, which answers correctly for a re-render
-    that came out identical.
+    and one digest over the authored files every picture draws. Nothing checks
+    it (the gate's freshness check was removed on 12 October 2026); it is there
+    for a person to compare against Get-DrawnContentStamp.
 
     THE RECORD IS WRITTEN BY THE CAPTURE AND NEVER BY HAND. It says a picture
     was drawn, and only the thing that drew it knows that. A capture updates the
@@ -33,8 +26,8 @@
 #>
 
 # The authored files a sheet or a frame draws: the board, the roster, the
-# ladder, and the scenery standing on the board. Named here once, so the capture
-# and the checker cannot disagree about what a picture is a claim about.
+# ladder, and the scenery standing on the board. Named here once, so every
+# capture agrees about what a picture is a claim about.
 function Get-DrawnContent {
     return , @(
         'content/map.txt'
@@ -132,9 +125,8 @@ function Update-RenderedFrom {
         '# was captured.'
         '#'
         '# WRITTEN BY THE CAPTURE AND NEVER BY HAND. It says a picture was drawn,'
-        '# and only the thing that drew it knows that. tools/check-docs.ps1 reads'
-        '# it where a commit date cannot answer -- a re-render that came out'
-        '# pixel-identical leaves git nothing to date.'
+        '# and only the thing that drew it knows that. Nothing checks it; it is'
+        '# here for a person asking which content a picture shows.'
         '#'
         '#       picture                        drawn from'
         ''

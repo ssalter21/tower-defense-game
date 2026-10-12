@@ -2,7 +2,7 @@
 
 Drawn through the real `TowerView` and `CreepView` by `tools/capture-armed-roster.ps1 -SetFile <set file>`,
 each from a set file — models, props, atlases and one pose — and none from the four authored content files, so
-`check-docs.ps1` exempts every sheet here from being dated against `content/`. Each is a copy under a name
+moving `content/` does not make one stale. Each is a copy under a name
 nothing else writes: regenerate with the command in its caption and copy `candidates-sheet.png` over it. The
 roster's rulings on what these sheets asked are on the rows themselves in [the roster](../../roster.md) and
 [the roster's art](../../roster-art.md); the readings below are as taken.
@@ -26,8 +26,8 @@ roster's rulings on what these sheets asked are on the rows themselves in [the r
   the question the sheet is asking.
 
   It draws no board, no roster row and no price — every character on it is a model no row in
-  `content/units.txt` points at yet — which is why `check-docs.ps1` exempts it from being dated against the
-  authored content. Regenerate it with the command above and copy `candidates-sheet.png` over it; the tool's
+  `content/units.txt` points at yet — so moving the authored content
+  does not make it stale. Regenerate it with the command above and copy `candidates-sheet.png` over it; the tool's
   own output name is deliberately not the committed one, because every candidate run rewrites it.
 
 - [`roster/melee-lines-sheet.png`](melee-lines-sheet.png) — the nine rungs of the Knight, the Barbarian
@@ -56,7 +56,7 @@ roster's rulings on what these sheets asked are on the rows themselves in [the r
   on `_B`. That is the rule working as written, and whether it reads as one figure is the eye check.
 
   Like the sheet above it, it draws no board, no price and no roster row — a set sheet is drawn from its set
-  file — which is why `check-docs.ps1` exempts it from being dated against the authored content. Regenerate
+  file — so moving the authored content does not make it stale. Regenerate
   it with the command above and copy `candidates-sheet.png` over it.
 
 - [`roster/caster-lines-sheet.png`](caster-lines-sheet.png) — the nine rungs of the Cleric, the Mage
@@ -99,7 +99,7 @@ roster's rulings on what these sheets asked are on the rows themselves in [the r
   model's UVs land and not a sheet of its own.
 
   Like the two sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
-  its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
+  its set file — so moving the authored content does not make it stale.
   Regenerate it with the command above and copy `candidates-sheet.png` over it.
 
 - [`roster/pierce-turret-lines-sheet.png`](pierce-turret-lines-sheet.png) — the nine rungs of the
@@ -166,7 +166,7 @@ roster's rulings on what these sheets asked are on the rows themselves in [the r
   is not looking at what fires.
 
   Like the three sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
-  its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
+  its set file — so moving the authored content does not make it stale.
   Regenerate it with the command above and copy `candidates-sheet.png` over it.
 
 - [`roster/creep-bodies-sheet.png`](creep-bodies-sheet.png) — the six creep bodies of ids 39 to 46,
@@ -217,7 +217,7 @@ roster's rulings on what these sheets asked are on the rows themselves in [the r
   half rather than the undead half — and whether the colour carries it is an eye check.
 
   Like the four sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
-  its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
+  its set file — so moving the authored content does not make it stale.
   Regenerate it with the command above and copy `candidates-sheet.png` over it.
 
 - [`roster/creep-bodies-rest-sheet.png`](creep-bodies-rest-sheet.png) — the last six creep bodies,
@@ -274,7 +274,7 @@ roster's rulings on what these sheets asked are on the rows themselves in [the r
   respectively.
 
   Like the five sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
-  its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
+  its set file — so moving the authored content does not make it stale.
   Regenerate it with the command above and copy `candidates-sheet.png` over it.
 
 ## The four under-served rungs, twice each
@@ -316,6 +316,6 @@ roster's rulings on what these sheets asked are on the rows themselves in [the r
   minus the characters and the thirteen already bound to another line. Its own `.txt` measures which
   thirteen of the forty-five cannot be told from an empty hand even at magnification.
 
-  Like every set sheet above, none of the eight draws a board, a price or a roster row, which is why
-  `check-docs.ps1` exempts them from being dated against the authored content. Regenerate with the
+  Like every set sheet above, none of the eight draws a board, a price or a roster row, so moving the
+  authored content does not make them stale. Regenerate with the
   commands in each `.txt` and copy `candidates-sheet.png` over the committed name.
