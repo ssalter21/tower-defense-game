@@ -96,8 +96,8 @@ MonoBehaviour:
       windupClip: {fileID: 5420664022460959746, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: spellbook_open
-        tip: {x: 0, y: 0, z: 0}
+        transformName: Mage
+        tip: {x: 0, y: 1, z: 0}
       bubbleSignature: 0
       shotSignature: 0
       walkClip: {fileID: 0}
@@ -334,9 +334,9 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
         transformName: paladin_hammer
         tip: {x: 0, y: 1, z: 0}
@@ -356,9 +356,9 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
         transformName: paladin_hammer
         tip: {x: 0, y: 1, z: 0}
@@ -378,9 +378,9 @@ MonoBehaviour:
         offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 7719806121101089419, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
         transformName: paladin_book
         tip: {x: 0, y: 0, z: 0}
@@ -426,8 +426,8 @@ MonoBehaviour:
       windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: Cleric_Mace
-        tip: {x: 0, y: 1, z: 0}
+        transformName: handslot.l
+        tip: {x: 0, y: 0, z: 0}
       bubbleSignature: 0
       shotSignature: 3
       walkClip: {fileID: 0}
@@ -448,8 +448,8 @@ MonoBehaviour:
       windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: Cleric_Mace
-        tip: {x: 0, y: 1, z: 0}
+        transformName: handslot.l
+        tip: {x: 0, y: 0, z: 0}
       bubbleSignature: 4
       shotSignature: 3
       walkClip: {fileID: 0}
@@ -664,9 +664,9 @@ MonoBehaviour:
         offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 7417917891377754313, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
         transformName: turret_base
         tip: {x: 0, y: 1, z: 0}
@@ -682,13 +682,13 @@ MonoBehaviour:
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 919132149155446097, guid: dea6792986bf6834e97e758a23e605bd, type: 3}
-        scale: 1
+        scale: 1.25
         offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 7417917891377754313, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
         transformName: turret_base
         tip: {x: 0, y: 1, z: 0}
@@ -704,13 +704,13 @@ MonoBehaviour:
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 919132149155446097, guid: dea6792986bf6834e97e758a23e605bd, type: 3}
-        scale: 1
+        scale: 1.5
         offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 7417917891377754313, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
         transformName: turret_base
         tip: {x: 0, y: 1, z: 0}

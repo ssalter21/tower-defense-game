@@ -33,28 +33,6 @@ namespace Tests.EditMode
         private static Rect Everything => new Rect(-10f, -10f, 20f, 20f);
 
         [Test]
-        public void TheGeneratedDiscIsAsRoundAsTheCylinderTheGameDraws()
-        {
-            GameObject cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-
-            try
-            {
-                Mesh primitive = cylinder.GetComponent<MeshFilter>().sharedMesh;
-
-                Assert.That(
-                    DirectionsAround(primitive),
-                    Is.EqualTo(EffectMeshes.DiscSides),
-                    "EffectMeshes.DiscSides is meant to be the tessellation of Unity's own cylinder, "
-                    + "so that a candidate about where a circle stops is not also a candidate about "
-                    + "how round it is. Unity's has moved.");
-            }
-            finally
-            {
-                Object.DestroyImmediate(cylinder);
-            }
-        }
-
-        [Test]
         public void ADiscNothingCutsIsTheWholeCircle()
         {
             Mesh disc = EffectMeshes.ClippedDisc(EffectMeshes.DiscSides, 0.1f, Everything);

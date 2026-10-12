@@ -17,5 +17,4 @@ is [`docs/prototypes/smoothing/`](../../prototypes/smoothing/README.md).
 | `board-check.png` | The corridor's steepest cell — the one with the most height change around it, 4,4 on the committed board — cropped out of each frame at twice the size, match on the left and plan on the right. The render checked against itself: the level change at that cell has to be visible in both, with the shades alone. |
 
 Every frame is 1600x900. `rendered-from.txt` beside them is what the capture leaves behind saying which
-content it drew, written by the capture and never by hand; `tools/check-docs.ps1` reads it where a commit
-date cannot answer.
+content it drew, written by the capture and never by hand.

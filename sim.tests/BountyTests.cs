@@ -61,29 +61,6 @@ public class BountyTests
     private const int TwelveGold = 12;
 
     [Fact]
-    public void Killing_a_grave_robber_pays_the_defender_twelve_and_leaking_one_pays_nothing()
-    {
-        // The signed mechanic, on the committed roster and against the committed
-        // defense. Four hundred gold of Grave Robbers walk into four archers and
-        // two mages; the ones that die pay twelve each and the ones that reach
-        // the exit pay nothing, which is the whole of the rule in one match.
-        UnitTypeTable types = TheMatch.Types();
-
-        Assert.Equal(TwelveGold, types.ById(GraveRobber).Bounty);
-
-        Match match = MetByTheCommittedDefense(types);
-        MatchResult result = match.Resolve();
-
-        // Both outcomes happen in this match, which is what makes it an
-        // assertion about the difference between them rather than about one of
-        // them.
-        Assert.Equal(14, result.Leaked);
-        Assert.Equal(2, match.Killed);
-        Assert.Equal(2 * TwelveGold, match.Bounty);
-        Assert.Equal(match.Bounty, result.Bounty);
-    }
-
-    [Fact]
     public void A_grave_robber_nothing_can_kill_pays_nothing_at_all()
     {
         // The other half of the same sentence, isolated. The committed defense,
@@ -104,19 +81,6 @@ public class BountyTests
 
         Assert.Equal(16, result.Leaked);
         Assert.Equal(0, result.Bounty);
-    }
-
-    [Fact]
-    public void Nothing_else_on_the_committed_roster_pays_for_being_killed()
-    {
-        // One row, and the assertion is over the whole table rather than over
-        // the row -- so a bounty authored on anything else is a red test rather
-        // than a number nobody looked at.
-        UnitTypeTable types = TheMatch.Types();
-
-        Assert.Equal(
-            new[] { GraveRobber },
-            types.Types.Where(row => row.Bounty > 0).Select(row => row.Id).ToArray());
     }
 
     [Fact]

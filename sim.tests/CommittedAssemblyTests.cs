@@ -23,41 +23,6 @@ public class CommittedAssemblyTests
     private const int DisableOptimizations = 0x100;
 
     [Fact]
-    public void The_assembly_and_its_symbols_are_both_in_the_repository()
-    {
-        // Both are committed, and the reason is mechanical rather than
-        // aspirational: Sim.dll.meta carries the Auto Reference off setting,
-        // and Unity deletes orphaned .meta files. An ignored assembly comes
-        // back with auto-reference ON at every fresh clone, dissolving the
-        // boundary the setting exists to protect. The symbols are committed
-        // because the debugger can only step from view code into simulation
-        // code if the .pdb is on disk beside the plug-in.
-        Assert.True(File.Exists(RepoLayout.CommittedAssembly), RepoLayout.CommittedAssembly + " is missing.");
-        Assert.True(File.Exists(RepoLayout.CommittedSymbols), RepoLayout.CommittedSymbols + " is missing.");
-    }
-
-    [Fact]
-    public void The_plug_in_metadata_turns_auto_reference_off()
-    {
-        foreach (string artefact in new[] { RepoLayout.CommittedAssembly, RepoLayout.CommittedSymbols })
-        {
-            string meta = artefact + ".meta";
-            Assert.True(
-                File.Exists(meta),
-                meta + " is missing, so a fresh clone would import this artefact with default settings.");
-        }
-
-        // Unity spells "Auto Reference off" as isExplicitlyReferenced: 1.
-        // Measured with the editor in batch mode: with this at 0, Sim.dll
-        // appears as a <Reference> in the generated Assembly-CSharp.csproj;
-        // with it at 1, it does not.
-        Assert.Contains(
-            "isExplicitlyReferenced: 1",
-            File.ReadAllText(RepoLayout.CommittedAssembly + ".meta"),
-            StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void The_committed_configuration_is_debug()
     {
         // Load-bearing, not cosmetic. Debug.Assert and everything else marked

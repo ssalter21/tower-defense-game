@@ -10,10 +10,6 @@ skill that says "the tracker doc" means this file.
 - Label a fully specified ticket `ready-for-agent`; label one that will not be actioned `wontfix`. There is no
   `needs-triage`, `needs-info` or `ready-for-human` — an untriaged ticket is simply unlabelled. Create a label
   before using it rather than assuming it exists.
-- Label a pull request `regenerated-deliberately` when its branch moves a golden artefact — the trace, the
-  landmark table, `content/golden/`, the run outcome, the replay or the command list — because the
-  gate's `tools/check-golden-label.ps1` is red without it, and the label is a person saying they read the
-  regenerated diff.
 - Read open/closed off native issue state; there is no `Status:` line. "Resolved" is closed with an
   `## Answer` comment; "claimed" is open and assigned.
 - Converse in ordinary issue comments.

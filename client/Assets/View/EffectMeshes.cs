@@ -90,7 +90,6 @@ namespace View
         /// would make a candidate about <i>where a circle ends</i> into a
         /// candidate about how round it is as well — two questions in one
         /// picture, which is the species this project keeps deleting.
-        /// <c>EffectMeshTests</c> stands a primitive cylinder up and counts.
         /// </remarks>
         public const int DiscSides = 20;
 

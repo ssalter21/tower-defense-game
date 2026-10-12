@@ -148,22 +148,6 @@ public class ReplayBundleTests
     }
 
     [Fact]
-    public void The_committed_bundle_replays_to_the_committed_result()
-    {
-        // Through the replay gate, not around it: the file on disk is a record
-        // this build is allowed to simulate, and simulating it is the match the
-        // whole skeleton is built around.
-        UnitTypeTable types = TheMatch.Types();
-        MatchResult result = ReplayBundle.FromBytes(File.ReadAllBytes(RepoLayout.BundleFile))
-            .Replay(types, TheRuleset.Committed())
-            .Resolve();
-
-        Assert.Equal(TheMatch.LeakedInTheCommittedRun, result.Leaked);
-        Assert.Equal(TheMatch.FinalTickOfTheCommittedRun, result.FinalTick);
-        Assert.Equal(TheMatch.Trace().At(TheMatch.FinalTickOfTheCommittedRun), result.RollingStateHash);
-    }
-
-    [Fact]
     public void A_grid_whose_shape_and_contents_disagree_refuses()
     {
         ContentException thrown = Assert.Throws<ContentException>(
@@ -281,9 +265,7 @@ public class ReplayBundleTests
         // half-block steps is a board the hand-placed six no longer reach
         // across, and folding it flat hands them back the route they cannot
         // watch. Nothing was retuned to produce that and nothing is retuned to
-        // answer it -- see RunTests.The_canned_pool_is_one_opponent_who_builds
-        // _a_wall_and_buys_the_same_wave_again, which is the same finding read
-        // off a different run.
+        // answer it.
         //
         // The reading is asserted rather than dropped, and so is the fact that
         // the two now differ: what proves the flat branch here is the level

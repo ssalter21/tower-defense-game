@@ -55,9 +55,7 @@ on the day they were played.
 
 ## What dates these, and what does not
 
-`tools/check-docs.ps1` names them exempt from the invariant that dates a picture against the content it draws,
-and the reason is in that file beside the six roster sheets it exempts for reasons of their own: **a
-photograph of a session is dated by the session.** Re-capturing one is playing a different run — a different
+**A photograph of a session is dated by the session.** Re-capturing one is playing a different run — a different
 seed's worth of arrival order, a different tick under the pointer — so asking for a re-capture asks for
 something nobody can produce, and the picture that came back would not be this picture.
 

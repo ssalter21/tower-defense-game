@@ -16,8 +16,6 @@ only**: a finding goes in [`docs/research/`](docs/research/), a reference in [`d
   untested code handed back silently is the failure.
 - Run the Unity tests yourself, editor closed — `run-editmode-tests.ps1`, `run-playmode-tests.ps1` or
   `run-unity-tests.ps1` — because `dotnet test sim.tests` is everything CI runs.
-- Expect `check-unity-test-inventory.ps1` to pass a changed test or view file unbuilt: it counts the client's
-  tests and compiles nothing.
 - Treat `nightly-unity.ps1` (registered by `register-nightly-unity.ps1`; 03:00; one line per runner to
   `client/Logs/nightly.log`) as a catch, not a substitute: it tests one checkout the morning after.
 
@@ -60,8 +58,8 @@ passes every check on an artefact nobody has looked at. The evidence each row re
 |---|---|---|
 | `sim/`, `sim.tests/`, `sim.poison/` | The gate, the matrix, the IL scan, the golden trace | Full — a green gate is sufficient |
 | `content/*.txt` | The trace moves and must be regenerated deliberately | Full to change; never to regenerate in order to get green |
-| `simcli/`, `tools/` | The gate runs seven of these scripts; every other one runs from a shell | Full — run the one you changed |
-| `docs/` | `check-docs.ps1`, on four claims a document makes about other files | Full to draft; a person's review is the gate |
+| `simcli/`, `tools/` | The gate runs five of these scripts; every other one runs from a shell | Full — run the one you changed |
+| `docs/` | `check-docs.ps1`, on three claims a document makes about other files | Full to draft; a person's review is the gate |
 | `client/`, non-visual | The three Unity runners, editor closed, counts reported | Full — the agent runs the runners itself |
 | `client/`, visual | A captured frame or sheet, and a person | Agent proposes; a person decides |
 | Art, names, numbers a player sees | Nothing automatable | Human only — the standing rules |

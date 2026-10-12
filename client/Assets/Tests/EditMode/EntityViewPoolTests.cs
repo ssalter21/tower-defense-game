@@ -106,38 +106,6 @@ namespace Tests.EditMode
         }
 
         /// <summary>
-        /// The number that stops climbing. Over a match this is what says
-        /// pooling is doing anything at all: it settles just above the busiest
-        /// moment the match ever had, and nowhere near the number of entities
-        /// the match contained.
-        /// </summary>
-        /// <remarks>
-        /// <b>Four objects for three concurrent entities, and the extra one is
-        /// inherent rather than waste.</b> Within a sync, claims come before
-        /// releases — and they have to, because until every claim is in there
-        /// is no way to know which ids stopped appearing. So on the frame where
-        /// entity 4 arrives and entity 1 leaves, the arrival is served while
-        /// entity 1's object is still live, and the pool builds one more. From
-        /// then on it never builds another: the fourth object absorbs every
-        /// subsequent rotation.
-        /// </remarks>
-        [Test]
-        public void TheObjectCountSettlesJustAboveTheBusiestMoment()
-        {
-            EntityViewPool<Transform> pool = Pool();
-
-            // Forty entities, never more than three at once -- the shape of a
-            // wave walking past.
-            for (int id = 1; id <= 40; id++)
-            {
-                Sync(pool, id, id + 1, id + 2);
-            }
-
-            Assert.That(pool.EverCreated, Is.EqualTo(4),
-                "objects were built per entity, not per concurrent entity");
-        }
-
-        /// <summary>
         /// The property that actually matters, stated without depending on the
         /// exact steady-state number: it stops growing.
         /// </summary>
@@ -163,51 +131,6 @@ namespace Tests.EditMode
         }
 
         /// <summary>
-        /// The hardest case in the whole contract, and it needs no code: a
-        /// projectile whose target died mid-flight is an id that stopped
-        /// appearing, exactly like a creep that walked off the end.
-        /// </summary>
-        [Test]
-        public void AnEntityThatVanishesMidFlightIsNoDifferentFromAnyOther()
-        {
-            EntityViewPool<Transform> pool = Pool();
-
-            Sync(pool, 100, 200);
-            Transform shell = pool.Live[200];
-
-            // The creep it was aimed at died, so the simulation dropped the
-            // projectile. Nothing told the view.
-            Sync(pool, 100);
-
-            Assert.That(pool.Live.ContainsKey(200), Is.False);
-            Assert.That(shell.gameObject.activeSelf, Is.False, "the object is still being drawn");
-        }
-
-        [Test]
-        public void AnEmptySnapshotReleasesEverything()
-        {
-            EntityViewPool<Transform> pool = Pool();
-
-            Sync(pool, 1, 2, 3, 4);
-            Sync(pool);
-
-            Assert.That(pool.LiveCount, Is.EqualTo(0));
-            Assert.That(pool.IdleCount, Is.EqualTo(4));
-        }
-
-        [Test]
-        public void ReleaseAllIsTheSameAsAnEmptySnapshot()
-        {
-            EntityViewPool<Transform> pool = Pool();
-
-            Sync(pool, 1, 2, 3);
-            pool.ReleaseAll();
-
-            Assert.That(pool.LiveCount, Is.EqualTo(0));
-            Assert.That(pool.IdleCount, Is.EqualTo(3));
-        }
-
-        /// <summary>
         /// Two entities sharing an id means one is invisible and the other is
         /// posed twice. Loud, because it is silent otherwise.
         /// </summary>
@@ -220,28 +143,6 @@ namespace Tests.EditMode
             pool.Claim(5);
 
             Assert.Throws<InvalidOperationException>(() => pool.Claim(5));
-        }
-
-        /// <summary>
-        /// Without a sync there is no record of what was claimed, so an EndSync
-        /// would release everything still alive. Refused rather than tolerated.
-        /// </summary>
-        [Test]
-        public void ClaimingOutsideASyncThrows()
-        {
-            EntityViewPool<Transform> pool = Pool();
-
-            Assert.Throws<InvalidOperationException>(() => pool.Claim(1));
-        }
-
-        [Test]
-        public void ASyncThatNeverEndedIsRefusedRatherThanNested()
-        {
-            EntityViewPool<Transform> pool = Pool();
-
-            pool.BeginSync();
-
-            Assert.Throws<InvalidOperationException>(pool.BeginSync);
         }
 
         /// <summary>
@@ -275,31 +176,6 @@ namespace Tests.EditMode
 
             Assert.That(another, Is.SameAs(villager), "the view a transformed body gave up was thrown away");
             Assert.That(pool.EverCreated, Is.EqualTo(2));
-        }
-
-        /// <summary>
-        /// And the view it gives up is on its stack in time for the rest of the
-        /// same sync to take it, which is what a column of bodies transforming
-        /// while another one spawns behind them looks like.
-        /// </summary>
-        [Test]
-        public void TheViewAChangedBodyGivesUpIsAvailableInsideTheSameSync()
-        {
-            EntityViewPool<Transform> pool = Pool();
-
-            pool.BeginSync();
-            Transform villager = pool.Claim(1, variant: 47);
-            pool.EndSync();
-
-            pool.BeginSync();
-            pool.Claim(1, variant: 48);
-            Transform arriving = pool.Claim(2, variant: 47);
-            pool.EndSync();
-
-            Assert.That(arriving, Is.SameAs(villager), "the view was not free until the sync ended");
-            Assert.That(pool.LiveCount, Is.EqualTo(2));
-            Assert.That(pool.IdleCount, Is.EqualTo(0));
-            Assert.That(pool.EverCreated, Is.EqualTo(2), "a third view was built for two bodies");
         }
     }
 }

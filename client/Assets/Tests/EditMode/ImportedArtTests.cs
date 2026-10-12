@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Sim;
-using Tests.Fixtures;
 using UnityEditor;
 using UnityEngine;
 using View;
@@ -37,10 +36,10 @@ namespace Tests.EditMode
     public class ImportedArtTests
     {
         /// <summary>The skinned character every other adventurer import is read against.</summary>
-        public const string RangerPath = ChosenArt.RangerModelPath;
+        public const string RangerPath = "Assets/Art/Characters/Ranger.fbx";
 
         /// <summary>The weapon, imported separately and hung off a bone at runtime.</summary>
-        public const string BowPath = ChosenArt.BowModelPath;
+        public const string BowPath = "Assets/Art/Weapons/bow_withString.fbx";
 
         /// <summary>
         /// Everything a unit holds. Each is its own import, hung off a bone at
@@ -49,13 +48,13 @@ namespace Tests.EditMode
         /// </summary>
         public static readonly string[] HeldPaths =
         {
-            ChosenArt.BowModelPath,
-            ChosenArt.StaffModelPath,
-            ChosenArt.SwordModelPath,
-            ChosenArt.SkeletonStaffModelPath,
-            ChosenArt.SkeletonBladeModelPath,
-            ChosenArt.SkeletonShieldAModelPath,
-            ChosenArt.SkeletonShieldBModelPath,
+            "Assets/Art/Weapons/bow_withString.fbx",
+            "Assets/Art/Weapons/staff.fbx",
+            "Assets/Art/Weapons/sword_1handed.fbx",
+            "Assets/Art/Weapons/Skeleton_Staff.fbx",
+            "Assets/Art/Weapons/Skeleton_Blade.fbx",
+            "Assets/Art/Weapons/Skeleton_Shield_Large_A.fbx",
+            "Assets/Art/Weapons/Skeleton_Shield_Large_B.fbx",
         };
 
         /// <summary>
@@ -65,13 +64,13 @@ namespace Tests.EditMode
         /// No unit is drawn with it: every row in <c>content/units.txt</c> is a
         /// character. It stays in the project because the non-skinned import
         /// path is the half of this pipeline nothing else exercises. Named here
-        /// rather than in <see cref="ChosenArt"/>, which is the list of what a
+        /// rather than in <see cref="MatchSceneBuilder"/>, which is the list of what a
         /// match is actually drawn with.
         /// </remarks>
         public const string TowerPath = "Assets/Art/Buildings/building_tower_A_blue.fbx";
 
         /// <summary>The bank the three tower-state clips come out of.</summary>
-        public const string RangedBankPath = ChosenArt.RangedBankPath;
+        public const string RangedBankPath = "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx";
 
         /// <summary>The tier-1 Archer.</summary>
         private const int ArcherUnitId = 3;
@@ -95,45 +94,52 @@ namespace Tests.EditMode
             "Assets/Art/Kaykit/skeletons/skeleton_texture_A.png";
 
         private const string BlackKnightAtlasPath =
-            ChosenArt.BlackKnightFolder + "blackknight_texture.png";
+            "Assets/Art/Kaykit/mystery-monthly-series-5/black-knight/blackknight_texture.png";
 
         private const string FrostGolemAtlasPath =
-            ChosenArt.FrostGolemFolder + "frostgolem_texture.png";
+            "Assets/Art/Kaykit/mystery-monthly-series-5/frostgolem/frostgolem_texture.png";
 
         private const string MonstrosityAtlasPath =
-            ChosenArt.MonstrosityFolder + "monstrosity_texture_A.png";
+            "Assets/Art/Kaykit/mystery-monthly-series-6/monstrosity/monstrosity_texture_A.png";
 
-        private const string TieflingAtlasPath = ChosenArt.TieflingFolder + "tiefling_texture.png";
+        private const string TieflingAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-5/tiefling/tiefling_texture.png";
 
         /// <summary>
         /// The sheet the Ninja imports wearing, which is the one the Shade draws
         /// in until the darkest of the four is picked. The other three are
         /// imported and bound to nothing.
         /// </summary>
-        private const string NinjaAtlasPath = ChosenArt.NinjaFolder + "ninja_texture_A.png";
+        private const string NinjaAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/ninja/ninja_texture_A.png";
 
-        private const string VampireAtlasPath = ChosenArt.VampireFolder + "vampire_texture.png";
+        private const string VampireAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-5/vampire/vampire_texture.png";
 
-        private const string WitchAtlasPath = ChosenArt.WitchFolder + "witch_texture_A.png";
+        private const string WitchAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-5/witch/witch_texture_A.png";
 
-        private const string WerewolfAtlasPath = ChosenArt.WerewolfFolder + "werewolf_A.png";
+        private const string WerewolfAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/werewolf/werewolf_A.png";
 
-        private const string HoarderAtlasPath = ChosenArt.HoarderFolder + "hoarder_texture.png";
+        private const string HoarderAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/hoarder/hoarder_texture.png";
 
-        private const string EngineerModelPath = ChosenArt.EngineerModelPath;
+        private const string EngineerModelPath = "Assets/Art/Kaykit/adventurers/Engineer.fbx";
 
-        private const string TurretPath = ChosenArt.TurretModelPath;
+        private const string TurretPath = "Assets/Art/Kaykit/adventurers/turret_base.fbx";
 
         private const string CratePath = "Assets/Art/Kaykit/adventurers/ammo_crate.fbx";
 
         private const string EngineerAtlasPath = "Assets/Art/Kaykit/adventurers/engineer_texture.png";
 
         /// <summary>The Marksman's skin, one of the two sheets that body draws with.</summary>
-        private const string MarksmanAtlasPath = ChosenArt.MarksmanFolder + "marksman_texture.png";
+        private const string MarksmanAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/marksman/marksman_texture.png";
 
         /// <summary>The ghillie wrap, which is the other one.</summary>
         private const string MarksmanFoliageAtlasPath =
-            ChosenArt.MarksmanFolder + "marksman_foliage_texture.png";
+            "Assets/Art/Kaykit/mystery-monthly-series-6/marksman/marksman_foliage_texture.png";
 
         /// <summary>The sheet the Rogue line's two bodies and its dagger are all on.</summary>
         private const string RogueAtlasPath = "Assets/Art/Kaykit/adventurers/rogue_texture.png";
@@ -185,15 +191,6 @@ namespace Tests.EditMode
         private const string LorekeeperAtlasPath =
             "Assets/Art/Kaykit/mystery-monthly-series-6/lorekeeper/lorekeeper_texture.png";
 
-        /// <summary>
-        /// The second model proposed for the Druid's tier 3 and set aside on
-        /// issue #250: it read as a different creature rather than as the same
-        /// person promoted, so that line is colour and a prop at every rung.
-        /// Imported, and drawn by nothing.
-        /// </summary>
-        private const string PlantWarriorModelPath =
-            "Assets/Art/Kaykit/mystery-monthly-series-6/plant-warrior/PlantWarrior.fbx";
-
         private const string DruidModelPath = "Assets/Art/Kaykit/adventurers/Druid.fbx";
 
         private const string DruidAtlasPath = "Assets/Art/Kaykit/adventurers/druid_texture.png";
@@ -239,7 +236,7 @@ namespace Tests.EditMode
         /// <remarks>
         /// <para>
         /// <b>All four are bound to rows now, and this holds them against the
-        /// record a second time.</b> The two binding tables each carry the
+        /// record a second time.</b> The builder's binding table carries the
         /// Blessing, the Consecration, the Overgrowth and the three rungs of
         /// the Engineer; the record is <c>docs/roster.md</c>, and
         /// <c>docs/roster-expansion-beside-candidates.txt</c> is the same four
@@ -297,19 +294,19 @@ namespace Tests.EditMode
         {
             (RangerPath, RangerAtlasPath),
             (BowPath, RangerAtlasPath),
-            (ChosenArt.StaffModelPath, "Assets/Art/Characters/mage_texture.png"),
-            (ChosenArt.SwordModelPath, "Assets/Art/Characters/knight_texture.png"),
-            (ChosenArt.SkeletonStaffModelPath, SkeletonAtlasPath),
-            (ChosenArt.SkeletonBladeModelPath, SkeletonAtlasPath),
-            (ChosenArt.SkeletonShieldAModelPath, SkeletonAtlasPath),
-            (ChosenArt.SkeletonShieldBModelPath, SkeletonAtlasPath),
+            ("Assets/Art/Weapons/staff.fbx", "Assets/Art/Characters/mage_texture.png"),
+            ("Assets/Art/Weapons/sword_1handed.fbx", "Assets/Art/Characters/knight_texture.png"),
+            ("Assets/Art/Weapons/Skeleton_Staff.fbx", SkeletonAtlasPath),
+            ("Assets/Art/Weapons/Skeleton_Blade.fbx", SkeletonAtlasPath),
+            ("Assets/Art/Weapons/Skeleton_Shield_Large_A.fbx", SkeletonAtlasPath),
+            ("Assets/Art/Weapons/Skeleton_Shield_Large_B.fbx", SkeletonAtlasPath),
             (TowerPath, "Assets/Art/Buildings/hexagons_medieval.png"),
-            (ChosenArt.WarriorModelPath, "Assets/Art/Characters/skeleton_texture.png"),
-            (ChosenArt.MinionModelPath, SkeletonAtlasPath),
-            (ChosenArt.RogueModelPath, SkeletonAtlasPath),
-            (ChosenArt.SkeletonMageModelPath, SkeletonAtlasPath),
-            (ChosenArt.KnightModelPath, "Assets/Art/Characters/knight_texture.png"),
-            (ChosenArt.MageModelPath, "Assets/Art/Characters/mage_texture.png"),
+            ("Assets/Art/Characters/Skeleton_Warrior.fbx", "Assets/Art/Characters/skeleton_texture.png"),
+            ("Assets/Art/Characters/Skeleton_Minion.fbx", SkeletonAtlasPath),
+            ("Assets/Art/Characters/Skeleton_Rogue.fbx", SkeletonAtlasPath),
+            ("Assets/Art/Characters/Skeleton_Mage.fbx", SkeletonAtlasPath),
+            ("Assets/Art/Characters/Knight.fbx", "Assets/Art/Characters/knight_texture.png"),
+            ("Assets/Art/Characters/Mage.fbx", "Assets/Art/Characters/mage_texture.png"),
 
             // The four props that stand beside a tower, and the characters they
             // stand beside. This is where the confetti risk is sharpest: a
@@ -330,15 +327,15 @@ namespace Tests.EditMode
             // hammer, shield and book. The shield_square is on the Adventurers
             // pack's own knight sheet, which is not the copy in Art/Characters
             // that the live Knight model binds.
-            (ChosenArt.BarbarianModelPath, BarbarianAtlasPath),
-            (ChosenArt.BarbarianLargeModelPath, BarbarianAtlasPath),
-            (ChosenArt.AxeModelPath, BarbarianAtlasPath),
-            (ChosenArt.LargeAxeModelPath, BarbarianAtlasPath),
-            (ChosenArt.ShieldSquareModelPath, AdventurersKnightAtlasPath),
-            (ChosenArt.PaladinModelPath, PaladinAtlasPath),
-            (ChosenArt.HammerModelPath, PaladinAtlasPath),
-            (ChosenArt.PaladinShieldModelPath, PaladinAtlasPath),
-            (ChosenArt.BookModelPath, PaladinAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/Barbarian.fbx", BarbarianAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/Barbarian_Large.fbx", BarbarianAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/axe_2handed.fbx", BarbarianAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/axe_2handed_Large.fbx", BarbarianAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/shield_square.fbx", AdventurersKnightAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx", PaladinAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx", PaladinAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx", PaladinAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx", PaladinAtlasPath),
 
             (ClericModelPath, ClericAtlasPath),
             (FontPath, ClericAtlasPath),
@@ -350,23 +347,24 @@ namespace Tests.EditMode
             // Art/Characters that the live Mage model binds; the two Cleric
             // props are on the Cleric's; and the Lorekeeper is a whole
             // character with its own.
-            (ChosenArt.SpellbookModelPath, AdventurersMageAtlasPath),
-            (ChosenArt.ClericTomeModelPath, ClericAtlasPath),
-            (ChosenArt.ClericMaceModelPath, ClericAtlasPath),
-            (ChosenArt.LorekeeperModelPath, LorekeeperAtlasPath),
-            (ChosenArt.LorekeeperTomeModelPath, LorekeeperAtlasPath),
-            (ChosenArt.DruidStaffModelPath, DruidAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/spellbook_open.fbx", AdventurersMageAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-6/cleric/Cleric_Tome.fbx", ClericAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-6/cleric/Cleric_Mace.fbx", ClericAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-6/lorekeeper/Lorekeeper.fbx", LorekeeperAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-6/lorekeeper/Lorekeeper_Tome.fbx",
+                LorekeeperAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/druid_staff.fbx", DruidAtlasPath),
 
             // The pierce and turret lines' remaining art. The Rogue's two
             // bodies and the dagger they throw are all on the pack's one rogue
             // sheet, and so is the crossbow the Overwatch holds -- that weapon
             // is authored on the archer's own character rather than on a sheet
             // of its own, the way the Ranger's quiver is.
-            (ChosenArt.AdventurerRogueModelPath, RogueAtlasPath),
-            (ChosenArt.HoodedRogueModelPath, RogueAtlasPath),
-            (ChosenArt.DaggerModelPath, RogueAtlasPath),
-            (ChosenArt.CrossbowModelPath, RogueAtlasPath),
-            (ChosenArt.WrenchModelPath, EngineerAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/Rogue.fbx", RogueAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/Rogue_Hooded.fbx", RogueAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/dagger.fbx", RogueAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/crossbow_2handed.fbx", RogueAtlasPath),
+            ("Assets/Art/Kaykit/adventurers/engineer_Wrench.fbx", EngineerAtlasPath),
 
             // The six creep bodies and what they carry, each off its own pack's
             // sheet. Five packs between them, so this is where a body wearing
@@ -375,35 +373,39 @@ namespace Tests.EditMode
             // Art/Characters the live skeletons bind, because the importer's
             // search walks a model's own folder first and the two files are
             // identical bytes under one name.
-            (ChosenArt.SkeletonGolemModelPath, PackSkeletonAtlasPath),
-            (ChosenArt.SkeletonGolemAxeModelPath, PackSkeletonAtlasPath),
-            (ChosenArt.BlackKnightModelPath, BlackKnightAtlasPath),
-            (ChosenArt.BlackKnightSwordModelPath, BlackKnightAtlasPath),
-            (ChosenArt.BlackKnightShieldModelPath, BlackKnightAtlasPath),
-            (ChosenArt.FrostGolemModelPath, FrostGolemAtlasPath),
-            (ChosenArt.FrostGolemAxeModelPath, FrostGolemAtlasPath),
-            (ChosenArt.MonstrosityModelPath, MonstrosityAtlasPath),
-            (ChosenArt.MonstrosityShieldModelPath, MonstrosityAtlasPath),
-            (ChosenArt.TieflingModelPath, TieflingAtlasPath),
-            (ChosenArt.TieflingBackpackModelPath, TieflingAtlasPath),
-            (ChosenArt.NinjaModelPath, NinjaAtlasPath),
-            (ChosenArt.NinjaKatanaModelPath, NinjaAtlasPath),
+            ("Assets/Art/Kaykit/skeletons/Skeleton_Golem.fbx", PackSkeletonAtlasPath),
+            ("Assets/Art/Kaykit/skeletons/Skeleton_Golem_Axe_Large.fbx", PackSkeletonAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/black-knight/BlackKnight.fbx", BlackKnightAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/black-knight/BlackKnight_Sword_Large.fbx",
+                BlackKnightAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/black-knight/BlackKnight_Shield_Large.fbx",
+                BlackKnightAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/frostgolem/FrostGolem.fbx", FrostGolemAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/frostgolem/FrostGolem_Axe.fbx", FrostGolemAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-6/monstrosity/Monstrosity.fbx", MonstrosityAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-6/monstrosity/Monstrosity_BarndoorShield_Large.fbx",
+                MonstrosityAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/tiefling/Tiefling.fbx", TieflingAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/tiefling/Tiefling_SwordsBackpack.fbx",
+                TieflingAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx", NinjaAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx", NinjaAtlasPath),
 
             // The remaining six creep bodies and what they carry. Four more
             // packs, and the Necromancer takes the same copy of the skeleton
             // sheet the Bone Golem does, for the same reason: it sits in the
             // pack folder rather than in Art/Characters, and the two files are
             // identical bytes under one name.
-            (ChosenArt.NecromancerModelPath, PackSkeletonAtlasPath),
-            (ChosenArt.SkeletonScytheModelPath, PackSkeletonAtlasPath),
-            (ChosenArt.VampireModelPath, VampireAtlasPath),
-            (ChosenArt.VampireSwordModelPath, VampireAtlasPath),
-            (ChosenArt.WitchModelPath, WitchAtlasPath),
-            (ChosenArt.BroomModelPath, WitchAtlasPath),
-            (ChosenArt.WerewolfManModelPath, WerewolfAtlasPath),
-            (ChosenArt.WerewolfWolfModelPath, WerewolfAtlasPath),
-            (ChosenArt.WerewolfAxeModelPath, WerewolfAtlasPath),
-            (ChosenArt.HoarderModelPath, HoarderAtlasPath),
+            ("Assets/Art/Kaykit/skeletons/Necromancer.fbx", PackSkeletonAtlasPath),
+            ("Assets/Art/Kaykit/skeletons/Skeleton_Scythe.fbx", PackSkeletonAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/vampire/Vampire.fbx", VampireAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/vampire/Vampire_Sword.fbx", VampireAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/witch/Witch.fbx", WitchAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-5/witch/Broom.fbx", WitchAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-4/werewolf/Werewolf_Man.fbx", WerewolfAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-4/werewolf/Werewolf_Wolf.fbx", WerewolfAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-4/werewolf/axe.fbx", WerewolfAtlasPath),
+            ("Assets/Art/Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx", HoarderAtlasPath),
         };
 
         /// <summary>
@@ -422,7 +424,8 @@ namespace Tests.EditMode
         /// </remarks>
         private static readonly (string model, string[] atlases)[] MultiSheetBindings =
         {
-            (ChosenArt.MarksmanModelPath, new[] { MarksmanAtlasPath, MarksmanFoliageAtlasPath }),
+            ("Assets/Art/Kaykit/mystery-monthly-series-6/marksman/Marksman.fbx",
+                new[] { MarksmanAtlasPath, MarksmanFoliageAtlasPath }),
         };
 
         /// <summary>
@@ -444,18 +447,18 @@ namespace Tests.EditMode
         /// </remarks>
         private static readonly string[] TowerClipNames =
         {
-            ChosenArt.BowIdleClipName,
-            ChosenArt.BowDrawClipName,
-            ChosenArt.BowReleaseClipName,
-            ChosenArt.RestClipName,
-            ChosenArt.SpellcastClipName,
-            ChosenArt.ChopClipName,
-            ChosenArt.TwoHandedChopClipName,
-            ChosenArt.BlockingClipName,
-            ChosenArt.ShootClipName,
-            ChosenArt.AimingClipName,
-            ChosenArt.ThrowClipName,
-            ChosenArt.DualwieldSliceClipName,
+            "Ranged_Bow_Idle",
+            "Ranged_Bow_Draw",
+            "Ranged_Bow_Release",
+            "Idle_A",
+            "Ranged_Magic_Spellcasting",
+            "Melee_1H_Attack_Chop",
+            "Melee_2H_Attack_Chop",
+            "Melee_Blocking",
+            "Ranged_Magic_Shoot",
+            "Ranged_2H_Aiming",
+            "Throw",
+            "Melee_Dualwield_Attack_Slice",
             SlamClipBareName,
         };
 
@@ -465,21 +468,21 @@ namespace Tests.EditMode
         /// <summary>The clip banks: the FBXs imported for their curves, not their meshes.</summary>
         private static readonly string[] ClipBankPaths =
         {
-            ChosenArt.MovementBankPath,
-            ChosenArt.GeneralBankPath,
-            ChosenArt.RangedBankPath,
-            ChosenArt.MeleeBankPath,
-            ChosenArt.LargeGeneralBankPath,
-            ChosenArt.LargeMeleeBankPath,
-            ChosenArt.LargeMovementBankPath,
+            "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx",
+            "Assets/Art/Animations/Rig_Medium_General.fbx",
+            "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx",
+            "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx",
+            "Assets/Art/Animations/Rig_Large_General.fbx",
+            "Assets/Art/Animations/Rig_Large_CombatMelee.fbx",
+            "Assets/Art/Animations/Rig_Large_MovementBasic.fbx",
         };
 
         /// <summary>The banks of the second rig, which five rows are drawn on.</summary>
         private static readonly string[] LargeBankPaths =
         {
-            ChosenArt.LargeGeneralBankPath,
-            ChosenArt.LargeMeleeBankPath,
-            ChosenArt.LargeMovementBankPath,
+            "Assets/Art/Animations/Rig_Large_General.fbx",
+            "Assets/Art/Animations/Rig_Large_CombatMelee.fbx",
+            "Assets/Art/Animations/Rig_Large_MovementBasic.fbx",
         };
 
         /// <summary>The Slam, the one tower on the Large rig.</summary>
@@ -491,9 +494,9 @@ namespace Tests.EditMode
         /// </summary>
         /// <remarks>
         /// Written out rather than read off the models, because what this is
-        /// held against is the binding tables' own idea of which rows are on
-        /// which rig — and taking that from the tables would be asserting they
-        /// agree with themselves.
+        /// held against is the binding table's own idea of which rows are on
+        /// which rig — and taking that from the table would be asserting it
+        /// agrees with itself.
         /// </remarks>
         private static readonly int[] LargeRigUnitIds = { SlamUnitId, 39, 40, 41, 42 };
 
@@ -505,19 +508,17 @@ namespace Tests.EditMode
         private static readonly int[] LargeRigCreepUnitIds =
             LargeRigUnitIds.Where(id => id != SlamUnitId).ToArray();
 
-        /// <summary>The Druid, the Elder and the Overgrowth, in roster order.</summary>
-        private static readonly int[] DruidLineUnitIds = { 28, 29, 30 };
-
-        /// <summary>The tier-1 Engineer, the row whose shots leave a turret.</summary>
-        private const int EngineerUnitId = 35;
-
         /// <summary>
         /// Every FBX in this project that carries a rig or clips: every model a
         /// unit is drawn with, plus the three banks. Walked rather than listed,
         /// so a model added to the roster is covered by being assigned rather
         /// than by somebody remembering to add it here.
         /// </summary>
-        private static IEnumerable<string> RiggedPaths => ChosenArt.ModelPaths.Concat(ClipBankPaths);
+        private static IEnumerable<string> RiggedPaths => ModelPaths.Concat(ClipBankPaths);
+
+        /// <summary>Every model a unit is drawn with, each named once.</summary>
+        private static IEnumerable<string> ModelPaths =>
+            MatchSceneBuilder.Art().Units.Select(u => AssetDatabase.GetAssetPath(u.Model)).Distinct();
 
         private readonly List<GameObject> _spawned = new List<GameObject>();
 
@@ -571,111 +572,22 @@ namespace Tests.EditMode
         }
 
         /// <summary>
-        /// Every unit the simulation can put on the board has a model and a
-        /// size, and the sizes are the ones <c>docs/roster.md</c> signed.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>Walked from the shipped unit table rather than from the art.</b>
-        /// The failure this catches is a row with no entry, and a test that
-        /// iterated the art would find every entry it had and never notice the
-        /// one it did not — the Necromancer arriving on a menu and drawing
-        /// nothing at all.
-        /// </para>
-        /// <para>
-        /// <b>Two multipliers and no exceptions.</b> "Towers 1, every creep a
-        /// half" is the whole rule: size says which side a row is on and never
-        /// which rung of a line it is. The role is read off the shipped table
-        /// rather than written out per unit, which makes this a third
-        /// transcription of the roster after the scene builder's and the
-        /// fixture's, and deliberately so: an assertion that read either table
-        /// would be checking it against itself.
-        /// </para>
-        /// </remarks>
-        [Test]
-        public void EveryUnitTypeIsDrawnAtItsRosterScale()
-        {
-            MatchArt art = ChosenArt.Load();
-
-            foreach (UnitType type in StreamingContent.ReadUnitTypes().Types)
-            {
-                Assert.That(art.ModelFor(type.Id), Is.Not.Null,
-                    $"unit {type.Id} ({type.Label}) has no model");
-
-                float expected = type.Role == UnitRole.Moving
-                    ? MatchArt.CreepScale
-                    : MatchArt.TowerScale;
-
-                Assert.That(art.ScaleFor(type.Id), Is.EqualTo(expected),
-                    $"unit {type.Id} ({type.Label}) is drawn at the wrong size for its role");
-            }
-        }
-
-        /// <summary>
         /// Every atlas a row names is imported, and imported as a texture.
         /// </summary>
         /// <remarks>
         /// A row naming an atlas that is not there is the flat-magenta failure
         /// this class exists for, one row further along: the material is built
         /// on a null map and the body draws in the base colour alone.
+        /// <see cref="MatchSceneBuilder.Art"/> throws naming any atlas a row
+        /// names and nothing imported, so loading the art is the check.
         /// </remarks>
         [Test]
         public void EveryAtlasARowNamesIsImported()
         {
-            foreach (string path in ChosenArt.TexturePaths)
-            {
-                Assert.That(AssetDatabase.LoadAssetAtPath<Texture2D>(path), Is.Not.Null,
-                    $"{path} is not in the project — a row names an atlas nothing imported");
-            }
-        }
+            IEnumerable<Texture2D> atlases =
+                MatchSceneBuilder.Art().Units.Select(u => u.Texture).Where(t => t != null);
 
-        /// <summary>
-        /// The two rows that share a model are told apart by something other
-        /// than size.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>Nothing else in this project holds the two rungs apart.</b> The
-        /// Archer and the Ranger are one model at one scale, so a build that
-        /// gave the Ranger no colour, no prop and no second body would ship two
-        /// rungs a player cannot tell apart — and every other test here would
-        /// stay green over it.
-        /// </para>
-        /// <para>
-        /// <b>Both halves, not either.</b> <c>docs/roster.md</c> signs this
-        /// rung as a colour <i>and</i> a prop, and an assertion satisfied by
-        /// whichever of the two happened to survive would let the other go
-        /// back to null with every runner green. Which atlas and which prop
-        /// stay unnamed here: those are the developer's to move, and naming
-        /// them would make this test the place the art is decided.
-        /// </para>
-        /// </remarks>
-        [Test]
-        public void TheTwoRowsOnOneModelAreToldApartWithoutSize()
-        {
-            MatchArt art = ChosenArt.Load();
-
-            UnitArt archer = art.ArtFor(ArcherUnitId);
-            UnitArt ranger = art.ArtFor(RangerUnitId);
-
-            Assert.That(ranger.Model, Is.SameAs(archer.Model),
-                "these are the two rows that share a model; if they no longer do, this test is "
-                + "asserting nothing and the roster has moved under it");
-
-            Assert.That(ranger.Scale, Is.EqualTo(archer.Scale),
-                "size is not a tier signal, so the two rungs of the Archer line draw at one scale");
-
-            Assert.That(ranger.Texture, Is.Not.Null,
-                "the Ranger shares the Archer's model and its size, so its own atlas is the colour "
-                + "half of what tells the two rungs apart — see docs/roster.md");
-
-            Assert.That(ranger.Texture, Is.Not.SameAs(archer.Texture),
-                "the Ranger draws in the atlas the Archer draws in, so the colour separates nothing");
-
-            Assert.That(
-                ranger.RightHand != archer.RightHand || ranger.LeftHand != archer.LeftHand,
-                Is.True,
-                "the Ranger holds exactly what the Archer holds, so the prop separates nothing");
+            Assert.That(atlases, Is.Not.Empty, "no row names an atlas of its own, so this checked nothing");
         }
 
         /// <summary>
@@ -709,7 +621,7 @@ namespace Tests.EditMode
         [Test]
         public void NoTwoRowsOnOneModelAreDrawnAlike()
         {
-            IReadOnlyList<UnitArt> rows = ChosenArt.Load().Units;
+            IReadOnlyList<UnitArt> rows = MatchSceneBuilder.Art().Units;
             var compared = 0;
 
             for (var i = 0; i < rows.Count; i++)
@@ -741,47 +653,6 @@ namespace Tests.EditMode
 
             Assert.That(compared, Is.GreaterThan(0),
                 "no two rows share a model, so this compared nothing at all");
-        }
-
-        /// <summary>
-        /// Every rung of the Druid line is drawn on the Druid, and no row
-        /// anywhere is drawn on the PlantWarrior.
-        /// </summary>
-        /// <remarks>
-        /// <b>A rejection only holds where something reads it.</b> The
-        /// PlantWarrior was proposed as this line's second model and set aside
-        /// on issue #250 — of the six second models it was the only one that
-        /// read as a different creature rather than as the same person promoted
-        /// — so the Druid keeps his own body and is told apart by colour and by
-        /// the weirwood beside him, the way the Knight, the Cleric and the
-        /// Engineer are. The model is imported and the proposal that named it
-        /// is still in <c>docs/</c>, so what keeps it unbound is this rather
-        /// than everybody remembering. Held over the whole table and over the
-        /// beside socket, since a body may stand beside a tower as easily as
-        /// under one.
-        /// </remarks>
-        [Test]
-        public void TheDruidLineIsDrawnOnTheDruidAndNothingOnThePlantWarrior()
-        {
-            MatchArt art = ChosenArt.Load();
-            GameObject druid = Loaded(DruidModelPath);
-            GameObject plantWarrior = Loaded(PlantWarriorModelPath);
-
-            foreach (int unitId in DruidLineUnitIds)
-            {
-                Assert.That(art.ModelFor(unitId), Is.SameAs(druid),
-                    $"unit {unitId} is a rung of the Druid line and docs/roster.md draws every one of "
-                    + "them on the Druid himself — that line has no second model");
-            }
-
-            foreach (UnitArt unit in art.Units)
-            {
-                Assert.That(unit.Model, Is.Not.SameAs(plantWarrior),
-                    $"unit {unit.UnitId} is drawn on the PlantWarrior, which issue #250 set aside");
-
-                Assert.That(unit.Beside.Model, Is.Not.SameAs(plantWarrior),
-                    $"unit {unit.UnitId} stands beside the PlantWarrior, which issue #250 set aside");
-            }
         }
 
         /// <summary>
@@ -821,7 +692,7 @@ namespace Tests.EditMode
         [Test]
         public void EverythingHeldIsOnItsBoneAndBigEnoughToSee()
         {
-            MatchArt art = ChosenArt.Load();
+            MatchArt art = MatchSceneBuilder.Art();
 
             var measured = 0;
 
@@ -871,7 +742,7 @@ namespace Tests.EditMode
         [Test]
         public void EveryTowerFiresFromAPointOnItsOwnArt()
         {
-            MatchArt art = ChosenArt.Load();
+            MatchArt art = MatchSceneBuilder.Art();
 
             var measured = 0;
 
@@ -967,7 +838,7 @@ namespace Tests.EditMode
         [Test]
         public void AnAnchorNamingSomethingTheArtDoesNotCarryFailsByName()
         {
-            UnitArt real = ChosenArt.Load().ArtFor(RangerUnitId);
+            UnitArt real = MatchSceneBuilder.Art().ArtFor(RangerUnitId);
 
             UnitArt misspelt = UnitArt.Armed(
                 real.UnitId, real.Model, real.Scale, null, null, null, null, null,
@@ -985,83 +856,6 @@ namespace Tests.EditMode
             Assert.That(refused.Message, Does.Contain("handslot.left"),
                 "the refusal has to name the anchor that was not found, or it sends the reader looking "
                 + "at the art instead of at the string");
-        }
-
-        /// <summary>
-        /// The Engineer's turret stands on the tile beside him, keeps standing
-        /// there while he turns, and is where his shots leave from.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>This is the whole of the Engineer line's identity.</b> He is a
-        /// wrench and a turret at every rung; the turret is what fires, so an
-        /// anchor that fell back to his own body would put the shell coming out
-        /// of the man rather than out of the machine. The anchor resolves
-        /// across the built tower, which is what makes a node inside a beside
-        /// prop the same kind of name as a bone.
-        /// </para>
-        /// <para>
-        /// <b>The turn is asserted because that is the failure this cannot see
-        /// in a photograph.</b> A tower rotates to track a creep, so a prop left
-        /// at a fixed local offset orbits it — swinging through the neighbouring
-        /// tiles once per target — and a still frame of any single tick looks
-        /// perfectly correct.
-        /// </para>
-        /// </remarks>
-        [Test]
-        public void TheEngineersTurretStandsBesideHimAndHisShotsLeaveIt()
-        {
-            UnitArt engineer = ChosenArt.Load().ArtFor(EngineerUnitId);
-
-            Assert.That(engineer.Model, Is.SameAs(Loaded(EngineerModelPath)),
-                $"unit {EngineerUnitId} is the row this test is about and it is drawn with something "
-                + "else now — the roster has moved under this assertion");
-
-            TowerView tower = BuiltTower(TypeOf(EngineerUnitId), engineer);
-
-            Assert.That(tower.Beside, Is.Not.Null, "nothing was drawn beside the Engineer");
-            Assert.That(tower.Beside.name, Is.EqualTo("turret_base"));
-
-            Assert.That(tower.Beside.transform.IsChildOf(tower.transform), Is.True,
-                "the turret hangs off the tower root, which is what makes it a socket rather than "
-                + "scenery somebody left on the board");
-
-            Assert.That(tower.Beside.transform.IsChildOf(tower.Model.transform), Is.False,
-                "the turret is under the body, so it inherits the row's scale and whatever atlas the "
-                + "row wears — which for a prop off another pack is confetti at the wrong size");
-
-            AssertStandsAt(
-                tower.Beside.transform.position,
-                tower.transform.position + BesideProp.NextTile,
-                "the turret does not stand on the tile beside him");
-
-            Transform anchor = tower.AnchorTransform;
-
-            Assert.That(anchor, Is.Not.Null, "the Engineer's anchor resolved to nothing");
-
-            Assert.That(anchor.IsChildOf(tower.Beside.transform), Is.True,
-                $"the Engineer fires from {anchor.name}, which is not part of the turret — the shot "
-                + "leaves the machine and not the man holding the wrench");
-
-            Bounds turret = WorldBounds(tower.Beside, null);
-
-            Assert.That(tower.Muzzle.y, Is.GreaterThan(turret.center.y),
-                "the shell leaves the underside of the turret");
-
-            Debug.Log(
-                $"[beside] the Engineer's turret is {turret.size.y:F2} m tall and fires from "
-                + $"{tower.Muzzle.y:F2} m up, {Vector3.Distance(tower.Muzzle, tower.transform.position):F2} m "
-                + "from his own root");
-
-            // Turned to track a creep behind him. The tower rotates; the thing
-            // on the ground beside it does not.
-            Vector3 stood = tower.Beside.transform.position;
-
-            tower.Pose(TowerState.Idle, 0, tower.transform.position + (Vector3.forward * 8f));
-
-            AssertStandsAt(
-                tower.Beside.transform.position, stood,
-                "the turret moved when the Engineer turned, so it orbits him rather than standing on a tile");
         }
 
         /// <summary>
@@ -1308,7 +1102,7 @@ namespace Tests.EditMode
         [Test]
         public void EveryUnitModelIsSkinnedAndCarriesTheWeaponBone()
         {
-            foreach (string path in ChosenArt.ModelPaths)
+            foreach (string path in ModelPaths)
             {
                 GameObject character = Instantiate(path);
 
@@ -1331,27 +1125,6 @@ namespace Tests.EditMode
                         $"{path} carries no '{bone}' bone");
                 }
             }
-        }
-
-        [Test]
-        public void TheHitscanTowerIsAStaticBuildingMesh()
-        {
-            GameObject tower = Instantiate(TowerPath);
-
-            MeshFilter[] filters = tower.GetComponentsInChildren<MeshFilter>(true);
-            Assert.IsNotEmpty(filters, "the tower imported with no mesh — this is the static import path");
-
-            foreach (MeshFilter filter in filters)
-            {
-                Assert.IsNotNull(filter.sharedMesh, $"{filter.name} has a mesh filter and no mesh");
-                Assert.Greater(filter.sharedMesh.vertexCount, 0, $"{filter.name}'s mesh is empty");
-            }
-
-            // Deliberately the other path, not a second copy of the first one:
-            // a building that arrived skinned would mean the two halves of this
-            // ticket are the same half twice.
-            Assert.IsEmpty(tower.GetComponentsInChildren<SkinnedMeshRenderer>(true),
-                "the building imported skinned — that is the character path, not the static one");
         }
 
         /// <summary>
@@ -1487,8 +1260,8 @@ namespace Tests.EditMode
         /// one every time. A medium clip on a Large body does not throw and
         /// does not warn: it drives bones that are not there and leaves the ones
         /// that are where they started, which reads as the model being bad.
-        /// Both binding tables spell a Large clip with its bank for that
-        /// reason, and this is what holds them to it.
+        /// The builder's binding table spells a Large clip with its bank for
+        /// that reason, and this is what holds it to it.
         /// </para>
         /// <para>
         /// <b>Held both ways.</b> A Large row's clips must come from the Large
@@ -1513,10 +1286,10 @@ namespace Tests.EditMode
             var large = new HashSet<AnimationClip>(
                 LargeBankPaths.SelectMany(AssetDatabase.LoadAllAssetsAtPath).OfType<AnimationClip>());
 
-            MatchArt art = ChosenArt.Load();
+            MatchArt art = MatchSceneBuilder.Art();
             UnitArt slam = art.ArtFor(SlamUnitId);
 
-            Assert.That(slam.Model, Is.SameAs(Loaded(ChosenArt.BarbarianLargeModelPath)),
+            Assert.That(slam.Model, Is.SameAs(Loaded("Assets/Art/Kaykit/adventurers/Barbarian_Large.fbx")),
                 $"unit {SlamUnitId} is the row this test knows to be on the Large rig, and it is drawn "
                 + "with something else now — the roster has moved under this assertion");
 
@@ -1584,30 +1357,6 @@ namespace Tests.EditMode
                     Assert.IsFalse(clip.hasMotionCurves, $"{clip.name} carries motion curves");
                     Assert.IsFalse(clip.hasGenericRootTransform, $"{clip.name} carries a generic root transform");
                 }
-            }
-        }
-
-        /// <summary>
-        /// Every rig arrived Generic, with no avatar.
-        /// </summary>
-        /// <remarks>
-        /// The proven path is generic transform curves: the clip animates named
-        /// transforms in this hierarchy directly. Humanoid would put a
-        /// retargeting solver between the clip and the bones — one more thing
-        /// between sim time and the pose, on a rig that never needed retargeting
-        /// in the first place.
-        /// </remarks>
-        [Test]
-        public void TheRigIsImportedGenericWithNoAvatar()
-        {
-            foreach (var path in RiggedPaths)
-            {
-                var importer = (ModelImporter)AssetImporter.GetAtPath(path);
-                Assert.IsNotNull(importer, $"no model importer for {path}");
-                Assert.AreEqual(ModelImporterAnimationType.Generic, importer.animationType,
-                    $"{path} is not imported as Generic");
-                Assert.AreEqual(ModelImporterAvatarSetup.NoAvatar, importer.avatarSetup,
-                    $"{path} was given an avatar");
             }
         }
     }

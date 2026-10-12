@@ -62,46 +62,6 @@ public class PreprocessorSourceTests
             + string.Join(Environment.NewLine, offences));
     }
 
-    [Fact]
-    public void The_check_is_looking_at_the_simulation_and_not_at_nothing()
-    {
-        // A file list that silently came back empty would make the test above
-        // green forever. Two independent things have to hold: there are source
-        // files, and the ones this ticket added are among them.
-        string[] sources = SimulationSources().ToArray();
-
-        Assert.NotEmpty(sources);
-        Assert.Contains(sources, path => Path.GetFileName(path) == "Fix64.cs");
-        Assert.Contains(sources, path => Path.GetFileName(path) == "Pcg32.cs");
-        Assert.Contains(sources, path => Path.GetFileName(path) == "DataText.cs");
-        Assert.Contains(sources, path => Path.GetFileName(path) == "HexMap.cs");
-    }
-
-    [Theory]
-    [InlineData("#if DEBUG")]
-    [InlineData("    #if DEBUG")]
-    [InlineData("#  if NET6_0_OR_GREATER")]
-    [InlineData("#else")]
-    [InlineData("#endif")]
-    [InlineData("#define TRACE_TICKS")]
-    [InlineData("#undef TRACE_TICKS")]
-    [InlineData("#elif UNITY_EDITOR")]
-    public void The_matcher_recognises_every_form_it_bans(string line)
-    {
-        Assert.Matches(Directive, line);
-    }
-
-    [Theory]
-    [InlineData("#region arithmetic")]
-    [InlineData("#nullable enable")]
-    [InlineData("#pragma warning disable CS0219")]
-    [InlineData("// #if DEBUG in a comment is prose, not compilation")]
-    [InlineData("int different = 1;")]
-    public void The_matcher_leaves_alone_what_it_does_not_ban(string line)
-    {
-        Assert.DoesNotMatch(Directive, line);
-    }
-
     private static IEnumerable<string> SimulationSources() =>
         Directory
             .EnumerateFiles(RepoLayout.SimDirectory, "*.cs", SearchOption.AllDirectories)

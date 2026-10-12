@@ -4,6 +4,7 @@ using Tests.PlayMode;
 using UnityEditor;
 using UnityEngine;
 using View;
+using View.Editor;
 
 namespace Tests.Fixtures
 {
@@ -22,8 +23,10 @@ namespace Tests.Fixtures
     /// <list type="bullet">
     /// <item><description>
     /// <b>The art</b>, which was loaded through <see cref="AssetDatabase"/> —
-    /// which does not exist in a player. Resolved here once and written as
-    /// serialized references, which a build carries.
+    /// which does not exist in a player. Taken from
+    /// <see cref="MatchSceneBuilder.Art"/> once and written as serialized
+    /// references, which a build carries. In the editor the same call is the
+    /// art source itself: <see cref="Install"/> registers it on domain load.
     /// </description></item>
     /// <item><description>
     /// <b>The oracle clips</b>, which were built at runtime with
@@ -72,14 +75,26 @@ namespace Tests.Fixtures
             AssetDatabase.SaveAssets();
         }
 
+        /// <summary>
+        /// Installs the editor adapter, in every editor domain, before play mode.
+        /// </summary>
+        /// <remarks>
+        /// The play-mode assembly cannot name the builder, so the builder's art
+        /// reaches it through <see cref="MatchArtSource"/>, registered from
+        /// here. In a player nothing registers and the manifest answers instead.
+        /// </remarks>
+        [InitializeOnLoadMethod]
+        private static void Install() => MatchArtSource.Use(new BuilderArtSource());
+
         private static void WriteManifest()
         {
-            MatchArt art = ChosenArt.Load();
+            MatchArt art = MatchSceneBuilder.Art();
 
             if (!art.IsComplete)
             {
                 throw new InvalidOperationException(
-                    "ChosenArt resolved to an incomplete bundle — refusing to write " + ManifestPath);
+                    "MatchSceneBuilder.Art resolved to an incomplete bundle — refusing to write "
+                    + ManifestPath);
             }
 
             EnsureFolder(ResourcesFolder);
@@ -142,6 +157,11 @@ namespace Tests.Fixtures
             AssetDatabase.CreateFolder(
                 Path.GetDirectoryName(folder).Replace('\\', '/'),
                 Path.GetFileName(folder));
+        }
+
+        private sealed class BuilderArtSource : IMatchArtSource
+        {
+            public MatchArt Load() => MatchSceneBuilder.Art();
         }
     }
 }

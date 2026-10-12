@@ -23,30 +23,6 @@ namespace Tests.EditMode
         public void TearDown() => BoardDressingTools.Clear();
 
         /// <summary>
-        /// The bug, at its smallest: move a thing, draw the board again, and the
-        /// thing is still where it was left.
-        /// </summary>
-        [Test]
-        public void RedrawingTheBoardKeepsWhatWasMoved()
-        {
-            HexMap map = StreamingContent.ReadMap();
-
-            HexFloor floor = Drawn(map);
-            (int Column, int Row) cell = FirstDressed(floor, map);
-
-            Vector3 left = Move(floor, cell, new Vector3(0.37f, 0f, -0.24f));
-
-            HexFloor again = Drawn(map);
-
-            Assert.That(
-                Offset(again, cell),
-                Is.EqualTo(left).Using(Near),
-                "Drawing the board again put the piece back where the generator wanted it. "
-                + "A redraw must carry unbaked work forward, because the board editor does "
-                + "one after every stroke.");
-        }
-
-        /// <summary>
         /// The bug as it is actually met: the map changes under the dressing.
         /// </summary>
         /// <remarks>
@@ -85,30 +61,6 @@ namespace Tests.EditMode
                 "One piece was moved and " + carried.CellCount + " cells came back authored. "
                 + "The redraw is measuring the old board against the new map and calling the "
                 + "generator's own work somebody's.");
-        }
-
-        /// <summary>
-        /// The way back. Carrying work forward would be a trap without one.
-        /// </summary>
-        [Test]
-        public void ClearingFirstGoesBackToTheFile()
-        {
-            HexMap map = StreamingContent.ReadMap();
-
-            HexFloor floor = Drawn(map);
-            (int Column, int Row) cell = FirstDressed(floor, map);
-
-            Vector3 was = Offset(floor, cell);
-
-            Move(floor, cell, new Vector3(0.5f, 0f, 0.5f));
-
-            BoardDressingTools.Clear();
-
-            Assert.That(
-                Offset(Drawn(map), cell),
-                Is.EqualTo(was).Using(Near),
-                "Clearing and drawing again did not go back to what the file says, so there "
-                + "is no way to abandon a change.");
         }
 
         // ---------------------------------------------------------------

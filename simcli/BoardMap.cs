@@ -52,9 +52,7 @@ internal static class BoardMap
     /// <summary>
     /// The four characters <c>content/map.txt</c> writes its cells with.
     /// <see cref="HexMap"/> keeps its own copies of these private, so this is a
-    /// second statement of one alphabet; what holds the two together is
-    /// <c>BoardMapTests</c> comparing the rows of the drawing against the rows
-    /// of the committed file.
+    /// second statement of one alphabet, and nothing tests that the two agree.
     /// </summary>
     private const char GroundCharacter = '.';
 

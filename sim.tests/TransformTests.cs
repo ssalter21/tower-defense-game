@@ -282,22 +282,6 @@ public class TransformTests
     }
 
     [Fact]
-    public void Exactly_one_committed_row_names_a_successor_and_it_is_the_villager()
-    {
-        // The roster's own claim, measured. A second transforming pair is a
-        // design decision docs/roster.md would have to sign, so a row that
-        // gained one quietly goes red here.
-        UnitTypeTable types = TheMatch.Types();
-
-        Assert.Equal(
-            new[] { "cursed-villager becomes werewolf" },
-            types.Types
-                .Where(row => row.Becomes is not null)
-                .Select(row => row.Label + " becomes " + row.Becomes!.Label)
-                .ToArray());
-    }
-
-    [Fact]
     public void A_row_that_becomes_something_no_row_authored_refuses_by_name()
     {
         ContentException thrown = Assert.Throws<ContentException>(

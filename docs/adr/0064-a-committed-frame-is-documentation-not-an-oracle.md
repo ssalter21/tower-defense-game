@@ -1,5 +1,8 @@
 # 0064 — A committed frame is documentation, not an oracle
 
+> **Amended 12 October 2026.** `check-docs.ps1` no longer dates pictures against the content; see
+> [decision-log/2026-10.md](../decision-log/2026-10.md). Captures still write `rendered-from.txt`.
+
 **Decided.** The rendered pictures under `docs/frames/` and `docs/chrome/` are for a person to look at a named
 tick without opening the editor. Nothing compares them to anything and nothing fails if they change. What
 catches a broken view is the assertions in `Tests.PlayMode/MatchViewTests` and the sit-down landmark table.
@@ -15,10 +18,8 @@ catches a broken view is the assertions in `Tests.PlayMode/MatchViewTests` and t
   "342,344"` and `-Ticks "311,342,344"` give different bytes for 0342 and 0344. So a fixture is re-captured
   with its whole recipe, and a frame is expected to move if it is not.
 - **A capture writes `rendered-from.txt` beside its pictures** — a digest over the four authored content files
-  as they stood — and never by hand. A re-capture that comes out pixel-identical leaves git nothing to date, so
-  `check-docs.ps1` asks the record where the date says a picture is older than the content
-  (`tools/_rendered-from.ps1` is the one list both read).
-- **A sheet drawn from a set file is exempt from that dating**, by name, one file at a time: it reads models,
+  as they stood — and never by hand (`tools/_rendered-from.ps1`).
+- **A sheet drawn from a set file does not go stale with the content**: it reads models,
   props, atlases and one pose and none of the authored files, so moving a price renders the same pixels. What
   would make it stale is a look in the roster moving, which is a person's job to notice.
 - **A candidate look is a file and never an edit to `MatchTuning`.** `-Effects` plays the recorded match with

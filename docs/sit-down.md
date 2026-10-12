@@ -57,14 +57,10 @@ would be pointing a few seconds off.
 
 ## The ticks these rows point at
 
-Transcribed from the committed landmark table. It is a second copy of those four
-numbers, and it is pinned — but say exactly to what: `SitDownTests` in the build
-gate re-runs the recorded match and fails if **this table** and **that run**
-disagree. `content/landmarks.txt` is held against the same run, by `LandmarkTests`
-and by `tools/run-headless-match.ps1 -Verify`. So the two copies agree because
-both are checked against the match itself, and not because either is checked
-against the other. A content change that moves a moment turns the gate red rather
-than quietly sending somebody to the wrong second.
+Transcribed from the committed landmark table, and an unchecked second copy of
+those four numbers: nothing tests this table. `content/landmarks.txt` is held
+against the recorded match by `tools/run-headless-match.ps1 -Verify`, so when a
+content change moves a moment, copy the new ticks across from that file.
 
 | landmark | tick | what happens |
 |---|---|---|
@@ -128,7 +124,7 @@ instead of the snapshot distance — one argument at `MatchView.DrawCreeps` — 
 exactly these two red and **leaves all seventy other tests green**, which is also
 the measurement of what was missing: nothing else in any tier noticed the view
 being rewired to a clock. The component seam was already covered
-(`PlayablesSamplingTests`, `RealRigSamplingTests`, `PlayableHeadPoisonTests` —
+(`PlayablesSamplingTests`, `RealRigSamplingTests` —
 a clip told a time poses at that time, forwards or backwards, and never advances
 on its own). What was never covered was the wiring between the match and that
 clip, and the wiring is what rows 4 and 5 were looking at.

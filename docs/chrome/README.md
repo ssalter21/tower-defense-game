@@ -101,13 +101,11 @@ and the build gate's last step fails the next push for a dirty repository.
 **A sheet is a claim about the content it was rendered from.** Move a price, a label, the ladder, the board or
 what stands on it and these three are stale while going on looking entirely reasonable — a build phase with the
 wrong number in it is not a picture that announces itself. Re-capture them whenever `content/units.txt`,
-`content/upgrades.txt`, `content/map.txt` or `content/dressing.txt` moves. Those four are the ones
-[`check-docs.ps1`](../../tools/check-docs.ps1) dates the committed sheets against.
+`content/upgrades.txt`, `content/map.txt` or `content/dressing.txt` moves. Nothing checks this; it is a
+person's job.
 
-**`rendered-from.txt` is what the capture leaves behind saying which content it drew.** A re-capture that comes
-out pixel-identical — which is what happens whenever the content that moved is not on these sheets — leaves
-nothing for a date to see, so the date alone would call a current sheet stale. The record answers that, and it
-is written by the capture and never by hand. See [`_rendered-from.ps1`](../../tools/_rendered-from.ps1).
+**`rendered-from.txt` is what the capture leaves behind saying which content it drew** — a digest over those
+four files, written by the capture and never by hand. See [`_rendered-from.ps1`](../../tools/_rendered-from.ps1).
 
 ## Two things that had to be measured
 

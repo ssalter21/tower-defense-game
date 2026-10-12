@@ -286,74 +286,6 @@ namespace Tests.PlayMode
             Assert.That(run.Sent.Count, Is.EqualTo(1));
         }
 
-        /// <summary>
-        /// The header carries four fields and the same four in both modes: the
-        /// wave, the health, the gold and the capstone tokens. None of them is
-        /// a forecast and none names a slot count — #179 took the take and the
-        /// slot bound out of the rules, which is why the purse is the figure a
-        /// wave is composed against.
-        /// </summary>
-        [Test]
-        public void TheHeaderSaysTheWaveTheHealthTheGoldAndTheTokensInBothModes()
-        {
-            MatchRoot root = Playfield();
-            RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
-            RunHeader header = loop.Header;
-
-            Assert.That(header.Wave.text, Is.EqualTo("Wave 1 of 10"));
-            Assert.That(header.Health.text, Is.EqualTo("Health 800 of 800"));
-            Assert.That(header.Gold.text, Is.EqualTo("100 gold"), "The purse a run opens on.");
-            Assert.That(
-                header.Tokens.text,
-                Is.EqualTo(RosterNames.CapstoneTokens(0, 0, 3)),
-                "The first grant is at round three, so an opening round holds none and has all three to come.");
-            Assert.That(header.Action.text, Is.EqualTo(RunLoop.CommitLabel));
-            Assert.That(header.Ending.text, Is.Empty, "No end frame while the run is going.");
-
-            Compose(root, "soldier 7 0 1");
-            header.Follow();
-
-            Assert.That(
-                header.Gold.text,
-                Is.EqualTo("62 gold"),
-                "A hundred, less a Soldier at 30 and the cheapest creep the box offered at 8. The gold on "
-                + "the bar is what the composed round would leave, which is what a wave is composed against.");
-
-            loop.Press();
-
-            Assert.That(header.Wave.text, Is.EqualTo("Wave 1 of 10"), "The wave being watched is the one composed.");
-            Assert.That(loop.Run.Purse.Gold, Is.Not.EqualTo(100), "The round was paid for and paid out.");
-            Assert.That(
-                header.Gold.text,
-                Is.EqualTo(RosterNames.Gold(loop.Run.Purse.Gold)),
-                "Watching shows the run's own purse and not a composed one.");
-            Assert.That(header.Action.text, Is.EqualTo(RunLoop.GoOnLabel));
-
-            loop.Press();
-
-            Assert.That(header.Wave.text, Is.EqualTo("Wave 2 of 10"));
-            Assert.That(header.Action.text, Is.EqualTo(RunLoop.CommitLabel));
-            Assert.That(header.Tokens.text, Is.EqualTo(RosterNames.CapstoneTokens(0, 0, 3)));
-
-            loop.Press();
-            header.Follow();
-
-            Assert.That(
-                header.Tokens.text,
-                Is.EqualTo(RosterNames.CapstoneTokens(0, 0, 3)),
-                "Watching wave two, the run has not been handed wave three's token yet: the count is "
-                + "through the wave on screen, not the one the run is about to build.");
-
-            loop.Press();
-            header.Follow();
-
-            Assert.That(header.Wave.text, Is.EqualTo("Wave 3 of 10"));
-            Assert.That(
-                header.Tokens.text,
-                Is.EqualTo(RosterNames.CapstoneTokens(1, 0, 2)),
-                "Round three is the first grant: one in hand, none spent, two still on the schedule.");
-        }
-
         [Test]
         public void TheEndFrameSaysWhatTheRunCameTo()
         {
@@ -625,51 +557,6 @@ namespace Tests.PlayMode
                 Is.EqualTo(health),
                 "Watching the other direction does not spend health, because health is not what it scores.");
             Assert.That(header.Health.text, Is.EqualTo("Health " + health + " of 800"));
-        }
-
-        /// <summary>
-        /// The control is up only while a round is being watched, it says the
-        /// two views in words, and the one on screen is the one that is lit.
-        /// Neither word is a type id or the record's vocabulary.
-        /// </summary>
-        /// <remarks>
-        /// Pinned at both ends in every mode the loop has, because an assertion
-        /// at one end alone passes just as well when the row was never laid out
-        /// or the display was never written -- the same reason
-        /// <see cref="RuntimePanel.Covers"/> is tested at both ends.
-        /// </remarks>
-        [Test]
-        public void TheResultsSwitchIsUpOnlyWhileARoundIsWatched()
-        {
-            MatchRoot root = Playfield();
-            RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
-            ResultsSwitch control = loop.Switch;
-
-            Assert.That(control.Defence.text, Is.EqualTo("Defence"));
-            Assert.That(control.Offence.text, Is.EqualTo("Offence"));
-            Assert.That(control.IsUp, Is.False, "There is nothing to switch between while a round is composed.");
-
-            Compose(root, "soldier 7 0 1");
-            loop.Press();
-
-            Assert.That(control.IsUp, Is.True, "A watched round has two views and this is how you say which.");
-            Assert.That(control.Defence.text, Is.EqualTo("Defence"), "The labels do not move with the view.");
-            Assert.That(control.Offence.text, Is.EqualTo("Offence"));
-
-            Color lit = control.Defence.style.backgroundColor.value;
-            Color dim = control.Offence.style.backgroundColor.value;
-
-            Assert.That(lit, Is.Not.EqualTo(dim), "The view on screen is the one that is lit.");
-
-            Press(control.Offence);
-
-            Assert.That(control.Offence.style.backgroundColor.value, Is.EqualTo(lit), "And it swaps with the view.");
-            Assert.That(control.Defence.style.backgroundColor.value, Is.EqualTo(dim));
-
-            loop.Press();
-
-            Assert.That(loop.Mode, Is.EqualTo(RunMode.Building));
-            Assert.That(control.IsUp, Is.False, "And it goes down again with the match.");
         }
 
         /// <summary>

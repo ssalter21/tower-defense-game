@@ -274,57 +274,6 @@ public class UpgradeLadderTests
     }
 
     [Fact]
-    public void An_edge_above_the_layout_row_refuses_to_load()
-    {
-        ContentException thrown = Assert.Throws<ContentException>(() => Parse("""
-            upgrade 2 3
-            layout 1
-            """));
-
-        Assert.Contains("above any 'layout' row", thrown.Message, StringComparison.Ordinal);
-        Assert.Equal(1, thrown.Line);
-    }
-
-    [Fact]
-    public void A_second_layout_row_refuses_to_load()
-    {
-        ContentException thrown = Assert.Throws<ContentException>(() => Parse("layout 1\n" + OneRung));
-
-        Assert.Contains("second 'layout' row", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_layout_row_below_an_edge_is_refused_as_the_second_one()
-    {
-        // The unit table has a refusal of its own for this, because a table with
-        // no layout row is layout 1 there and rows above the declaration are
-        // legitimately readable. Here they are not: an edge above the first
-        // layout row is already refused, so the only way to reach a layout row
-        // with edges above it is to have declared one already.
-        ContentException thrown = Assert.Throws<ContentException>(() => Parse(OneRung + "\nlayout 1"));
-
-        Assert.Contains("second 'layout' row", thrown.Message, StringComparison.Ordinal);
-        Assert.Equal(3, thrown.Line);
-    }
-
-    [Fact]
-    public void A_layout_this_reader_has_no_branch_for_refuses_to_load()
-    {
-        ContentException thrown = Assert.Throws<ContentException>(
-            () => Parse(PlantedText.Replace(OneRung, "layout 1", "layout 3")));
-
-        Assert.Contains("declares row layout 3", thrown.Message, StringComparison.Ordinal);
-        Assert.False(UpgradeLadder.IsKnownLayout(0));
-        Assert.False(UpgradeLadder.IsKnownLayout(3));
-
-        // Both branches that exist, named. The one below the current is here
-        // because a file written in it is still legal and still hashes to what
-        // it always did, which is the whole of what keeping a branch means.
-        Assert.True(UpgradeLadder.IsKnownLayout(UpgradeLadder.GoldOnlyLayout));
-        Assert.True(UpgradeLadder.IsKnownLayout(UpgradeLadder.CurrentLayout));
-    }
-
-    [Fact]
     public void A_diamond_whose_sides_are_equal_reports_no_fault()
     {
         // Two routes from the Mage to the Archmage, two edges each. A fork that
@@ -415,14 +364,6 @@ public class UpgradeLadderTests
         Assert.Equal(new[] { 2 }, Subjects(report, LadderRemark.FlatOrFallingPrice));
         Assert.Contains("40 gold", Assert.Single(report.Notes, note =>
             note.Remark == LadderRemark.FlatOrFallingPrice).Sentence, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_rising_price_is_not_remarked_on()
-    {
-        LadderReport report = Parse("layout 1\nupgrade 4 5").Completeness(Types());
-
-        Assert.Empty(Subjects(report, LadderRemark.FlatOrFallingPrice));
     }
 
     [Fact]

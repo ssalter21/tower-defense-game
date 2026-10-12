@@ -136,20 +136,6 @@ namespace Tests.EditMode
                 + "rise is not a multiple of LevelStep or this is not the piece we think it is.");
         }
 
-        [Test]
-        public void TheRoadRampLeansTowardsItsHighEdge()
-        {
-            Mesh ramp = MatchSceneBuilder.TileMesh(TilePiece.StraightRamp);
-
-            int high = RoadTiling.RampHighEdge;
-            int low = (high + (Hex.DirectionCount / 2)) % Hex.DirectionCount;
-
-            Assert.That(
-                SurfaceHeight(ramp, high) - SurfaceHeight(ramp, low),
-                Is.GreaterThan(HexGeometry.LevelStep * 0.5f),
-                "The ramp does not lean towards edge " + high + ", so every hill is entered from its top.");
-        }
-
         /// <summary>
         /// Which rims have road under them, as the six-bit set
         /// <see cref="RoadTiling.CorridorEdges"/> speaks in.

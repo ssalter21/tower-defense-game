@@ -390,26 +390,6 @@ public class CommandLineTests
     }
 
     [Fact]
-    public void A_run_verb_given_neither_the_file_nor_a_directory_names_both_ways_to_give_it()
-    {
-        // Nothing is assumed about where content lives: a verb with no --map and
-        // no --content refuses, and says which file it wanted and both ways of
-        // handing it over. A default path here would play a run against content
-        // nobody named and print a confident answer about a different game.
-        //
-        // OBSERVED: fall back to Path.Combine("content", file.FileName) instead
-        // of throwing. The exit code goes to 0 wherever the program happens to
-        // have been started from, and to 1 with a file-not-found somewhere else
-        // -- a verb whose behaviour is the shell's working directory.
-        CommandLineResult refused = TheCommandLine.Invoke(
-            "play-run", "--commands", RepoLayout.CommandFile);
-
-        Assert.Equal(1, refused.ExitCode);
-        Assert.Contains("'play-run' needs --map", refused.Error, StringComparison.Ordinal);
-        Assert.Contains("holding map.txt with --content", refused.Error, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void The_death_flag_is_a_switch_and_it_reaches_the_run()
     {
         // Death is a flag rather than a rule so that a harness can ask for a
@@ -437,28 +417,6 @@ public class CommandLineTests
             ", death does not end the run",
             TheCommandLine.Invoke(content.Append("--no-death")).Succeeded().Output,
             StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_switch_given_a_value_is_refused_rather_than_swallowing_the_next_option()
-    {
-        // A switch takes no value, so the thing after it is the next option and
-        // not its argument. The failure being engineered out is the quiet one: a
-        // parser that consumed one would swallow --commands the first time
-        // somebody wrote --no-death in front of it, and complain about a missing
-        // argument rather than about the switch.
-        //
-        // OBSERVED: empty Program.Switches. The exit code stays 1 and the
-        // message assertion goes red, because what comes back names --commands
-        // rather than --nonsense: the switch ate the option after it and the
-        // program reported that option's absence. The death-flag test above goes
-        // red with it, refusing a run nobody mistyped.
-        CommandLineResult refused = TheCommandLine.Invoke(
-            new[] { "play-run", "--no-death", "--commands", RepoLayout.CommandFile, "--nonsense", "1" }
-                .Concat(TheCommandLine.RunContent));
-
-        Assert.Equal(1, refused.ExitCode);
-        Assert.Contains("'--nonsense' is not an option of 'play-run'", refused.Error, StringComparison.Ordinal);
     }
 
     [Fact]

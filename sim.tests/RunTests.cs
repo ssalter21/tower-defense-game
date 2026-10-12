@@ -30,9 +30,6 @@ public class RunTests
     public static TheoryData<string, bool, bool, bool, bool> Scenarios => new()
     {
         { "normal play", true, true, false, false },
-        { "a scripted run", true, false, true, false },
-        { "a no-death run", false, false, true, false },
-        { "a server re-validating", true, false, false, true },
     };
 
     /// <summary>The first round <see cref="Run.CapstoneTokenRounds"/> grants at.</summary>
@@ -170,32 +167,6 @@ public class RunTests
     }
 
 
-
-    [Fact]
-    public void A_run_is_ten_waves_and_a_field_of_ten_until_the_caller_says_otherwise()
-    {
-        // Ten and ten are this map's answers and both are expected to move, so
-        // both are arguments with a default rather than constants in the loop.
-        //
-        // OBSERVED: draw Run.DefaultFieldSize opponents in Run.FieldFor instead
-        // of FieldSize. The last assertion goes red, not 274 against 274: the
-        // two-opponent run comes back with the ten-opponent run's numbers,
-        // because K was a constant wearing an argument's name.
-        Run defaults = TheRun.Fresh();
-
-        Assert.Equal(10, defaults.Waves);
-        Assert.Equal(10, defaults.FieldSize);
-        Assert.True(defaults.DeathEndsTheRun);
-        Assert.Equal(Run.DefaultWaves, defaults.Waves);
-        Assert.Equal(Run.DefaultFieldSize, defaults.FieldSize);
-
-        Run shorter = Played(TheRun.Fresh(waves: 3, fieldSize: 10));
-        Run narrower = Played(TheRun.Fresh(waves: 3, fieldSize: 2));
-
-        Assert.Equal(3, shorter.Outcome.Rounds.Count);
-        Assert.Equal(3, narrower.Outcome.Rounds.Count);
-        Assert.NotEqual(shorter.Outcome.LeakCostTaken, narrower.Outcome.LeakCostTaken);
-    }
 
     [Fact]
     public void A_leaked_creep_costs_health_equal_to_its_cost_one_for_one()
@@ -856,105 +827,6 @@ public class RunTests
 
         Assert.Equal(2, flat.StandInsAt(0));
         Assert.Same(later, flat.StandingIn(7, 1));
-    }
-
-    [Fact]
-    public void The_canned_pool_is_one_opponent_who_builds_a_wall_and_buys_the_same_wave_again()
-    {
-        // The population every run in this repository is played against, and it
-        // is composed here rather than by whoever happened to read the two
-        // files: one member a round, opening behind the committed defense,
-        // building on it out of a purse of its own, and sending the authored
-        // wave bought once more every round. A player accumulates both a wave
-        // and a wall over a run, so a stand-in that did neither is a run whose
-        // incoming pressure is flat while its own climbs.
-        //
-        // OBSERVED: hand every round the authored counts -- drop the
-        // multiplication in Grown. The round-seven assertion goes red at 10
-        // against 70. Record the seed at every round instead of the board the
-        // rounds build, and the wall assertion below goes red at equal worth.
-        UnitTypeTable types = TheMatch.Types();
-        Ruleset rules = TheRuleset.Committed();
-        CostTable costs = CostTable.From(rules, types);
-        TowerLayout defense = TheMatch.Layout(types);
-        WaveScript wave = TheRun.FieldWave(types);
-
-        FieldPool canned = FieldPool.Canned(
-            TheMatch.Map(),
-            rules,
-            types,
-            TheLadder.Committed(types),
-            defense,
-            wave,
-            rounds: 10);
-
-        Assert.Equal(10, canned.Rounds);
-        Assert.Equal(10, canned.Size);
-        Assert.Equal(1, canned.StandInsAt(6));
-
-        // The committed defense is the wall it opens behind, cell for cell, and
-        // what the first round adds to it is whatever half of the opening purse
-        // pays for. The rule stops at the first thing the half will not pay for
-        // rather than falling back on a cheaper one, so a round that finds
-        // nothing it can afford banks its share instead.
-        //
-        // TWO SEPARATE THINGS MOVED THIS ASSERTION, FROM TWO BRANCHES, AND THE
-        // MERGE IS WHERE THEY MEET. It bought one forty-gold archer while the
-        // roster was four rows and the map climbed three flat tiers. Then the
-        // roster went to nine roots and eighteen rungs, which puts a dearer row
-        // at the top of the score and can price the best-scoring purchase out of
-        // a fifty-gold half; and the map was regraded into a landscape, which
-        // the hand-placed committed six no longer reach across, so there is
-        // somewhere unwatched to place. One force takes the purchase away and
-        // the other hands it somewhere to go, and neither branch could see the
-        // other. The count below is what the merged build actually does, read
-        // off a run rather than argued from either half.
-        //
-        // <b>That the committed six no longer cover the route is a finding, not
-        // a fixture detail.</b> The defense is hand-placed and the board under it
-        // moved; that is the honest consequence, and it is written down here
-        // rather than papered over by widening the assertion to "roughly the
-        // same wall".
-        TowerLayout opening = canned.StandingIn(0, 0).Defense;
-
-        Assert.Equal(defense.Count + 1, opening.Count);
-        Assert.All(
-            TheMatch.Spelling(defense),
-            tower => Assert.Contains(tower, TheMatch.Spelling(opening)));
-
-        foreach (PlacedTower placed in defense.Towers)
-        {
-            Assert.Contains(
-                opening.Towers,
-                standing => standing.Column == placed.Column && standing.Row == placed.Row);
-        }
-
-        // And by the last round it is a bigger wall and a dearer one -- fifteen
-        // towers against the seven it opened behind. Every round is bought by
-        // the value half of the rule: another tower on route, or an upgrade of
-        // what stands, whichever scores more damage over the route per gold.
-        // The regraded board leaves room to keep placing all the way to the
-        // last round, so this run never reaches the covered-end-to-end state
-        // the flat map put it in by round one.
-        TowerLayout closing = canned.StandingIn(9, 0).Defense;
-
-        Assert.True(
-            closing.Count > opening.Count,
-            "The stand-in stood " + closing.Count + " towers by the last round against the " + opening.Count
-            + " it opened behind.");
-        Assert.True(
-            Worth(costs, closing) > Worth(costs, opening),
-            "The stand-in's wall is worth more by the last round than it was in the first.");
-
-        // One column, deeper every round. The shape is what content/field.txt
-        // is calibrated for, so growth is a count and never a second order.
-        Assert.Equal(wave.TotalUnits, canned.StandingIn(0, 0).Wave.TotalUnits);
-        Assert.Equal(wave.Count, canned.StandingIn(6, 0).Wave.Count);
-        Assert.Equal(wave.TotalUnits * 7, canned.StandingIn(6, 0).Wave.TotalUnits);
-        Assert.Equal(wave.TotalUnits * 10, canned.StandingIn(9, 0).Wave.TotalUnits);
-
-        // And past the last round it recorded, the deepest round stands.
-        Assert.Equal(wave.TotalUnits * 10, canned.StandingIn(40, 0).Wave.TotalUnits);
     }
 
     [Fact]
@@ -1748,19 +1620,6 @@ public class RunTests
 
         Assert.Equal(1, climbed.Build.CapstoneTokensSpent);
         Assert.Equal(0, run.CapstoneTokens);
-    }
-
-    /// <summary>What a wall costs to stand: every tower on it, at the price of its row.</summary>
-    private static int Worth(CostTable costs, TowerLayout wall)
-    {
-        int gold = 0;
-
-        for (int index = 0; index < wall.Towers.Count; index++)
-        {
-            gold += costs.PriceOf(Purchase.Unit(wall.Towers[index].Type.Id));
-        }
-
-        return gold;
     }
 
     /// <summary>

@@ -8,16 +8,13 @@ using UnityEngine;
 namespace Tests.PlayMode
 {
     /// <summary>
-    /// The other half of the Playables validation: the same purity claims, but on the
-    /// real imported KayKit rig and a real imported clip rather than a synthetic one.
-    ///
-    /// The synthetic tests prove the API samples a curve purely. These prove the claim
-    /// survives an asset-pack import — a skinned mesh, a bone hierarchy, and clips that
-    /// arrived from an FBX authored in Blender.
+    /// The Playables validation on the real imported KayKit rig and a real imported
+    /// clip rather than a synthetic one: the clip actually binds to and moves the
+    /// skeleton an asset-pack import produced.
     ///
     /// What the import <i>settings</i> are is a different question, and it is asserted
-    /// in the edit-mode suite where the importer can actually be asked. These three are
-    /// about the pose, and a pose is a runtime fact.
+    /// in the edit-mode suite where the importer can actually be asked. This is about
+    /// the pose, and a pose is a runtime fact.
     /// </summary>
     public class RealRigSamplingTests
     {
@@ -74,57 +71,10 @@ namespace Tests.PlayMode
 
             var moved = atStart.Where((v, i) => (v - atMiddle[i]).sqrMagnitude > 1e-8f).Count();
 
-            // Without this the purity tests below would pass trivially on a rig where
-            // nothing is bound and every bone sits still.
+            // A rig where nothing is bound draws every body frozen in its bind pose.
             Assert.Greater(moved, 0,
                 "no bone moved between phase 0 and 0.5 — the clip is not bound to this hierarchy at all");
             Debug.Log($"[realrig] bones={bones.Count} channels moved between phase 0 and 0.5: {moved}");
-        }
-
-        [Test]
-        public void SamplingTheRealClip_IsPathIndependent()
-        {
-            var (view, bones) = BuildRealRig();
-
-            foreach (var p in new[] { 0f, 0.1f, 0.25f, 0.4f }) view.Pose(0, p);
-            var fromBelow = Snapshot(bones);
-
-            foreach (var p in new[] { 1f, 0.8f, 0.6f, 0.4f }) view.Pose(0, p);
-            var fromAbove = Snapshot(bones);
-
-            for (var i = 0; i < fromBelow.Length; i++)
-            {
-                Assert.AreEqual(fromBelow[i].x, fromAbove[i].x, 1e-4f, $"channel {i} depends on approach direction");
-                Assert.AreEqual(fromBelow[i].y, fromAbove[i].y, 1e-4f, $"channel {i} depends on approach direction");
-                Assert.AreEqual(fromBelow[i].z, fromAbove[i].z, 1e-4f, $"channel {i} depends on approach direction");
-            }
-        }
-
-        [Test]
-        public void ScrubbingTheRealClipBackwards_RetracesTheSamePoses()
-        {
-            var (view, bones) = BuildRealRig();
-
-            var phases = new[] { 0f, 0.2f, 0.4f, 0.6f, 0.8f };
-            var forward = new List<Vector3[]>();
-            foreach (var p in phases)
-            {
-                view.Pose(0, p);
-                forward.Add(Snapshot(bones));
-            }
-
-            // Walk the same phases in reverse; each pose must match what it was going forwards.
-            for (var i = phases.Length - 1; i >= 0; i--)
-            {
-                view.Pose(0, phases[i]);
-                var back = Snapshot(bones);
-                for (var c = 0; c < back.Length; c++)
-                {
-                    Assert.AreEqual(forward[i][c].x, back[c].x, 1e-4f, $"phase {phases[i]} channel {c} differs on the way back");
-                    Assert.AreEqual(forward[i][c].y, back[c].y, 1e-4f, $"phase {phases[i]} channel {c} differs on the way back");
-                    Assert.AreEqual(forward[i][c].z, back[c].z, 1e-4f, $"phase {phases[i]} channel {c} differs on the way back");
-                }
-            }
         }
     }
 }

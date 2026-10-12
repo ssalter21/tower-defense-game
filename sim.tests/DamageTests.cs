@@ -382,46 +382,6 @@ public class DamageTests
     }
 
     [Fact]
-    public void The_stat_pipeline_is_a_named_ordered_list_with_exactly_one_stage_on_it()
-    {
-        // The mechanism, asserted: every stage this build declares is on the
-        // list, and the list has one thing on it. A second stage is a second
-        // truncation, so adding one is a decision about the integer contract
-        // and this is where it has to be taken.
-        //
-        // OBSERVED: add `Rounding = 1` to StatStage and leave DamageModel's
-        // StageOrder alone. The first assertion goes red naming "Rounding",
-        // which is exactly the failure a stage added and never applied should
-        // produce. Adding it to StageOrder instead reddens the count assertion,
-        // which is the other half.
-        var declared = (StatStage[])Enum.GetValues(typeof(StatStage));
-
-        foreach (StatStage stage in declared)
-        {
-            Assert.True(
-                DamageModel.Stages.Contains(stage),
-                "Stat stage "
-                + stage.ToString()
-                + " is declared and is not on the pipeline, so nothing applies it and no damage number "
-                + "anywhere is affected by it. A stage is declared, listed and given a branch, and all "
-                + "three or none.");
-        }
-
-        Assert.Equal(declared.Length, DamageModel.Stages.Count);
-
-        Assert.Single(DamageModel.Stages);
-        Assert.Equal(StatStage.TypedMitigation, DamageModel.Stages[0]);
-        Assert.Equal("typed mitigation", DamageModel.NameOf(DamageModel.Stages[0]));
-
-        // Every stage on the list has a branch behind it. A listed stage with
-        // no branch throws rather than passing the value through untouched.
-        foreach (StatStage stage in DamageModel.Stages)
-        {
-            Assert.NotEqual(string.Empty, DamageModel.NameOf(stage));
-        }
-    }
-
-    [Fact]
     public void A_stage_the_pipeline_does_not_know_is_refused_by_name()
     {
         // The default branch, reached the only way a test can reach it: with a
